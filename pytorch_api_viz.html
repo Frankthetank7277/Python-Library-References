@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PyTorch API Reference</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --surface2: #181c24;
+    --border: #1e2330;
+    --accent: #ee4b2b;
+    --accent2: #f97316;
+    --blue: #3b82f6;
+    --green: #22c55e;
+    --purple: #a855f7;
+    --yellow: #eab308;
+    --teal: #14b8a6;
+    --pink: #ec4899;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --code: #94a3b8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid noise background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  header {
+    position: relative;
+    z-index: 1;
+    padding: 48px 40px 32px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .logo-area h1 {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 800;
+    letter-spacing: -2px;
+    line-height: 1;
+    background: linear-gradient(135deg, #ee4b2b 0%, #f97316 50%, #eab308 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .logo-area .subtitle {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+
+  .stats {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .stat {
+    text-align: right;
+  }
+
+  .stat-num {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+
+  .search-bar {
+    position: relative;
+    z-index: 1;
+    padding: 20px 40px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .search-input {
+    flex: 1;
+    min-width: 200px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    padding: 10px 16px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .search-input::placeholder { color: var(--muted); }
+  .search-input:focus { border-color: var(--accent); }
+
+  .filter-btns {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .filter-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+
+  .filter-btn:hover, .filter-btn.active {
+    background: var(--surface2);
+    color: var(--text);
+    border-color: var(--muted);
+  }
+
+  .filter-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  main {
+    position: relative;
+    z-index: 1;
+    padding: 32px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  .category {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .cat-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .cat-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .cat-title {
+    font-size: 0.7rem;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+
+  .cat-line {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .cat-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+  }
+
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--cat-color);
+    transform: scaleY(0);
+    transition: transform 0.2s;
+    transform-origin: bottom;
+  }
+
+  .card:hover::before, .card.open::before {
+    transform: scaleY(1);
+  }
+
+  .card:hover {
+    border-color: var(--cat-color);
+    background: var(--surface2);
+    transform: translateY(-1px);
+  }
+
+  .card.open {
+    border-color: var(--cat-color);
+  }
+
+  .card-top {
+    padding: 14px 16px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .card-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--cat-color);
+    word-break: break-all;
+    line-height: 1.4;
+  }
+
+  .card-toggle {
+    font-size: 0.65rem;
+    color: var(--muted);
+    flex-shrink: 0;
+    transition: transform 0.2s;
+    margin-top: 2px;
+  }
+
+  .card.open .card-toggle {
+    transform: rotate(180deg);
+  }
+
+  .card-brief {
+    font-size: 0.75rem;
+    color: var(--muted);
+    padding: 0 16px 12px;
+    line-height: 1.5;
+  }
+
+  .card-detail {
+    display: none;
+    border-top: 1px solid var(--border);
+    padding: 14px 16px;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .card.open .card-detail {
+    display: flex;
+  }
+
+  .detail-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+  }
+
+  .code-block {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 10px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--code);
+    line-height: 1.7;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  .code-block .kw { color: #c792ea; }
+  .code-block .fn { color: #82aaff; }
+  .code-block .st { color: #c3e88d; }
+  .code-block .nm { color: #f78c6c; }
+  .code-block .cm { color: #546e7a; }
+
+  .tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    padding: 3px 8px;
+    border: 1px solid;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .hidden { display: none !important; }
+
+  footer {
+    position: relative;
+    z-index: 1;
+    padding: 24px 40px;
+    border-top: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 1px;
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 600px) {
+    header, main, .search-bar, footer { padding-left: 20px; padding-right: 20px; }
+    .cards-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-area">
+    <h1>PyTorch API</h1>
+    <div class="subtitle">Deep Learning Command Reference</div>
+  </div>
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-num" id="total-count">0</div>
+      <div class="stat-label">Commands</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" id="cat-count">0</div>
+      <div class="stat-label">Categories</div>
+    </div>
+  </div>
+</header>
+
+<div class="search-bar">
+  <input class="search-input" type="text" placeholder="Search commands... (e.g. conv2d, backward, optim)" id="search" />
+  <div class="filter-btns" id="filter-btns">
+    <button class="filter-btn active" data-filter="all">All</button>
+  </div>
+</div>
+
+<main id="main"></main>
+
+<footer>
+  <span>Click any card to expand with usage examples</span>
+  <span>PyTorch 2.x · Frank Lato · BIOE 486</span>
+</footer>
+
+<script>
+const CATEGORIES = [
+  {
+    id: "tensors",
+    name: "Tensor Ops",
+    color: "#3b82f6",
+    commands: [
+      { name: "torch.tensor()", brief: "Create a tensor from data", code: `x = torch.tensor([[1.0, 2.0], [3.0, 4.0]])
+x = torch.tensor(np.array([1,2,3]), dtype=torch.float32)`, tags: ["creation", "fundamental"] },
+      { name: "torch.zeros / ones / rand", brief: "Initialize tensors with fixed or random values", code: `z = torch.zeros(3, 4)         # all zeros
+o = torch.ones(2, 5)           # all ones
+r = torch.rand(8, 8)           # uniform [0,1)
+n = torch.randn(16, 16)        # std normal`, tags: ["init", "creation"] },
+      { name: "torch.arange / linspace", brief: "Create evenly spaced tensors", code: `a = torch.arange(0, 10, step=2)     # [0,2,4,6,8]
+l = torch.linspace(0.0, 1.0, 100)  # 100 pts`, tags: ["creation", "indexing"] },
+      { name: ".view() / .reshape()", brief: "Reshape a tensor without copying data (view requires contiguous)", code: `x = torch.randn(8, 8)
+flat = x.view(64)           # 1D
+b = x.view(4, 16)           # new shape
+r = x.reshape(2, 4, 8)     # safe reshape`, tags: ["shape"] },
+      { name: ".permute() / .transpose()", brief: "Reorder tensor dimensions", code: `# NCHW → NHWC (e.g. for matplotlib)
+x = torch.randn(1, 3, 224, 224)
+x = x.permute(0, 2, 3, 1)  # → (1,224,224,3)
+# 2D transpose
+w = w.transpose(0, 1)`, tags: ["shape", "dims"] },
+      { name: ".squeeze() / .unsqueeze()", brief: "Remove or add dimensions of size 1", code: `x = torch.randn(1, 64, 1)
+x.squeeze()           # → (64,)
+x.squeeze(0)          # → (64, 1)
+x.unsqueeze(1)        # → (1, 1, 64, 1)`, tags: ["shape", "dims"] },
+      { name: "torch.cat / torch.stack", brief: "Concatenate or stack tensors along a dimension", code: `a, b = torch.randn(4,8), torch.randn(4,8)
+torch.cat([a, b], dim=0)    # → (8,8)
+torch.stack([a, b], dim=0)  # → (2,4,8)`, tags: ["combine"] },
+      { name: "Elementwise math", brief: "Standard arithmetic and math functions", code: `x + y, x - y, x * y, x / y   # broadcast
+torch.exp(x), torch.log(x)
+torch.sqrt(x), torch.abs(x)
+torch.clamp(x, min=0, max=1)`, tags: ["math"] },
+      { name: "torch.matmul / @", brief: "Matrix multiplication — the backbone of linear layers", code: `y = torch.matmul(W, x)   # explicit
+y = W @ x                # shorthand
+# batched mm
+y = torch.bmm(A, B)     # (B,n,m) × (B,m,k)`, tags: ["math", "linear"] },
+      { name: ".to() / .cuda() / .cpu()", brief: "Move tensors between devices", code: `device = 'cuda' if torch.cuda.is_available() else 'cpu'
+x = x.to(device)
+x = x.cuda()    # → GPU
+x = x.cpu()     # → CPU
+x = x.to(dtype=torch.float16)`, tags: ["device"] },
+    ]
+  },
+  {
+    id: "autograd",
+    name: "Autograd",
+    color: "#ee4b2b",
+    commands: [
+      { name: "requires_grad=True", brief: "Flag a tensor to track gradients during forward pass", code: `x = torch.tensor([1.0, 2.0], requires_grad=True)
+# or
+x = x.requires_grad_(True)`, tags: ["grad", "fundamental"] },
+      { name: ".backward()", brief: "Compute gradients via backpropagation", code: `loss = criterion(output, target)
+loss.backward()           # scalar
+# non-scalar needs grad output
+loss.backward(torch.ones_like(loss))`, tags: ["grad", "training"] },
+      { name: ".grad", brief: "Access accumulated gradients on a leaf tensor", code: `x = torch.tensor([2.0], requires_grad=True)
+y = x ** 2
+y.backward()
+print(x.grad)    # tensor([4.]) — dy/dx = 2x`, tags: ["grad"] },
+      { name: "torch.no_grad()", brief: "Context manager to disable gradient computation (inference/eval)", code: `with torch.no_grad():
+    output = model(x)
+    # No grad tape → faster, less memory
+
+# or as decorator
+@torch.no_grad()
+def predict(model, x): ...`, tags: ["grad", "inference"] },
+      { name: "optimizer.zero_grad()", brief: "Clear accumulated gradients before each backward pass", code: `# Standard training loop step
+optimizer.zero_grad()   # 1. clear grads
+loss = criterion(out, y)
+loss.backward()         # 2. backprop
+optimizer.step()        # 3. update weights`, tags: ["grad", "training"] },
+      { name: "torch.autograd.grad()", brief: "Compute gradients of outputs w.r.t. inputs explicitly", code: `grads = torch.autograd.grad(
+    outputs=loss,
+    inputs=model.parameters(),
+    create_graph=True   # for 2nd order
+)`, tags: ["grad", "advanced"] },
+    ]
+  },
+  {
+    id: "nn",
+    name: "nn.Module",
+    color: "#a855f7",
+    commands: [
+      { name: "nn.Linear(in, out)", brief: "Fully connected (dense) layer: y = xWᵀ + b", code: `fc = nn.Linear(784, 256)
+# output: (batch, 256)
+# weight shape: (256, 784)
+# bias shape: (256,)`, tags: ["layer", "fundamental"] },
+      { name: "nn.Conv2d(in, out, k)", brief: "2D convolution — primary building block for CNNs", code: `conv = nn.Conv2d(
+    in_channels=3,
+    out_channels=64,
+    kernel_size=3,
+    stride=1,
+    padding=1,    # 'same'
+    bias=True
+)`, tags: ["layer", "cnn"] },
+      { name: "nn.BatchNorm2d(C)", brief: "Normalize activations across batch; stabilizes training", code: `bn = nn.BatchNorm2d(64)
+# After conv, before activation
+# model.train() → uses batch stats
+# model.eval()  → uses running stats`, tags: ["layer", "norm"] },
+      { name: "nn.Dropout(p)", brief: "Randomly zero activations during training to regularize", code: `drop = nn.Dropout(p=0.5)    # 50% drop
+drop2d = nn.Dropout2d(p=0.2) # channel-wise
+
+# Only active in model.train() mode`, tags: ["layer", "regularize"] },
+      { name: "nn.ReLU / Sigmoid / Tanh", brief: "Non-linear activation functions", code: `act = nn.ReLU()           # max(0,x)
+act = nn.LeakyReLU(0.01)  # avoids dead neurons
+act = nn.GELU()            # used in transformers
+act = nn.Sigmoid()         # (0,1) output
+act = nn.Softmax(dim=1)    # classification head`, tags: ["activation", "layer"] },
+      { name: "nn.MaxPool2d / AvgPool2d", brief: "Spatial downsampling via pooling", code: `pool = nn.MaxPool2d(kernel_size=2, stride=2)
+# halves spatial dims: (N,C,H,W) → (N,C,H/2,W/2)
+adapt = nn.AdaptiveAvgPool2d((1,1))
+# → (N,C,1,1) — global average pool`, tags: ["layer", "cnn"] },
+      { name: "nn.Sequential()", brief: "Chain layers into a simple feed-forward block", code: `block = nn.Sequential(
+    nn.Linear(512, 256),
+    nn.BatchNorm1d(256),
+    nn.ReLU(),
+    nn.Dropout(0.3),
+    nn.Linear(256, 10)
+)`, tags: ["model", "fundamental"] },
+      { name: "nn.Embedding(V, D)", brief: "Lookup table mapping integer indices to dense vectors", code: `emb = nn.Embedding(
+    num_embeddings=10000,  # vocab size
+    embedding_dim=128
+)
+idx = torch.tensor([1, 4, 7])
+out = emb(idx)  # → (3, 128)`, tags: ["layer", "nlp"] },
+      { name: "nn.TransformerEncoderLayer", brief: "Self-attention + FFN block (modern architectures)", code: `layer = nn.TransformerEncoderLayer(
+    d_model=512,
+    nhead=8,
+    dim_feedforward=2048,
+    dropout=0.1,
+    batch_first=True
+)`, tags: ["layer", "transformer"] },
+      { name: "nn.MultiheadAttention", brief: "Scaled dot-product multi-head attention", code: `attn = nn.MultiheadAttention(
+    embed_dim=512,
+    num_heads=8,
+    batch_first=True
+)
+out, weights = attn(query, key, value)`, tags: ["layer", "transformer"] },
+    ]
+  },
+  {
+    id: "custom",
+    name: "Custom Models",
+    color: "#14b8a6",
+    commands: [
+      { name: "class Model(nn.Module)", brief: "Define a custom model with __init__ and forward()", code: `class CNN(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = nn.Conv2d(1, 32, 3, padding=1)
+        self.fc = nn.Linear(32*28*28, 10)
+
+    def forward(self, x):
+        x = F.relu(self.conv1(x))
+        x = x.flatten(1)
+        return self.fc(x)`, tags: ["model", "fundamental"] },
+      { name: "model.parameters()", brief: "Iterator over all learnable parameters", code: `# Pass to optimizer
+optimizer = optim.Adam(model.parameters(), lr=1e-3)
+
+# Count params
+n = sum(p.numel() for p in model.parameters())
+trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)`, tags: ["model"] },
+      { name: "model.train() / .eval()", brief: "Toggle training vs inference mode (affects BN, Dropout)", code: `model.train()  # activates dropout, batch stats
+for x, y in train_loader:
+    ...
+
+model.eval()   # disables dropout, uses running stats
+with torch.no_grad():
+    preds = model(x_test)`, tags: ["model", "training"] },
+      { name: "torch.save / torch.load", brief: "Serialize and restore model weights or full checkpoints", code: `# Save weights only (preferred)
+torch.save(model.state_dict(), 'model.pth')
+
+# Load
+model.load_state_dict(torch.load('model.pth'))
+
+# Full checkpoint
+torch.save({'epoch': e, 'model': model.state_dict(),
+            'opt': optimizer.state_dict()}, 'ckpt.pth')`, tags: ["model", "io"] },
+    ]
+  },
+  {
+    id: "loss",
+    name: "Loss Functions",
+    color: "#ec4899",
+    commands: [
+      { name: "nn.CrossEntropyLoss()", brief: "Multi-class classification — combines LogSoftmax + NLLLoss", code: `criterion = nn.CrossEntropyLoss()
+# logits: (N, C), targets: (N,) long
+loss = criterion(logits, targets)
+# Includes class weights:
+criterion = nn.CrossEntropyLoss(weight=class_wts)`, tags: ["loss", "classification"] },
+      { name: "nn.BCEWithLogitsLoss()", brief: "Binary classification — numerically stable sigmoid + BCE", code: `criterion = nn.BCEWithLogitsLoss()
+# logits: (N,), targets: (N,) float
+loss = criterion(logits, labels.float())
+# Multi-label: logits (N, C)`, tags: ["loss", "classification"] },
+      { name: "nn.MSELoss()", brief: "Mean squared error for regression", code: `criterion = nn.MSELoss()          # mean
+criterion = nn.MSELoss(reduction='sum')  # sum
+loss = criterion(pred, target)   # both float`, tags: ["loss", "regression"] },
+      { name: "nn.L1Loss() / SmoothL1Loss", brief: "MAE and Huber loss for robust regression", code: `l1 = nn.L1Loss()        # |y - ŷ|
+huber = nn.SmoothL1Loss(beta=1.0)  # L1/L2 hybrid
+# less sensitive to outliers than MSE`, tags: ["loss", "regression"] },
+      { name: "nn.KLDivLoss()", brief: "KL divergence — used in VAEs, knowledge distillation", code: `kl = nn.KLDivLoss(reduction='batchmean')
+# input must be log-probabilities
+loss = kl(F.log_softmax(pred, dim=1),
+          F.softmax(target, dim=1))`, tags: ["loss", "generative"] },
+    ]
+  },
+  {
+    id: "optim",
+    name: "Optimizers",
+    color: "#22c55e",
+    commands: [
+      { name: "optim.SGD()", brief: "Stochastic Gradient Descent with optional momentum/weight decay", code: `opt = optim.SGD(
+    model.parameters(),
+    lr=0.01,
+    momentum=0.9,
+    weight_decay=1e-4,
+    nesterov=True
+)`, tags: ["optim", "fundamental"] },
+      { name: "optim.Adam()", brief: "Adaptive moment estimation — default choice for most tasks", code: `opt = optim.Adam(
+    model.parameters(),
+    lr=1e-3,           # default: 1e-3
+    betas=(0.9, 0.999),
+    eps=1e-8,
+    weight_decay=0.0
+)`, tags: ["optim", "fundamental"] },
+      { name: "optim.AdamW()", brief: "Adam with decoupled weight decay — preferred for fine-tuning", code: `opt = optim.AdamW(
+    model.parameters(),
+    lr=1e-4,
+    weight_decay=0.01   # L2 decoupled
+)`, tags: ["optim"] },
+      { name: "LR Schedulers", brief: "Adjust learning rate during training", code: `sched = optim.lr_scheduler.StepLR(opt, step_size=10, gamma=0.1)
+sched = optim.lr_scheduler.CosineAnnealingLR(opt, T_max=50)
+sched = optim.lr_scheduler.ReduceLROnPlateau(opt, 'min', patience=5)
+sched = optim.lr_scheduler.OneCycleLR(opt, max_lr=0.01, steps_per_epoch=len(loader), epochs=20)
+
+# Call each epoch:
+sched.step()`, tags: ["optim", "schedule"] },
+      { name: "Gradient clipping", brief: "Prevent exploding gradients in RNNs / transformers", code: `loss.backward()
+torch.nn.utils.clip_grad_norm_(
+    model.parameters(), max_norm=1.0
+)
+optimizer.step()`, tags: ["optim", "training"] },
+    ]
+  },
+  {
+    id: "data",
+    name: "Data Pipeline",
+    color: "#f97316",
+    commands: [
+      { name: "Dataset / DataLoader", brief: "Build custom dataset and efficient batching pipeline", code: `class MyDataset(Dataset):
+    def __init__(self, X, y):
+        self.X, self.y = X, y
+    def __len__(self): return len(self.X)
+    def __getitem__(self, i): return self.X[i], self.y[i]
+
+loader = DataLoader(dataset, batch_size=32,
+                    shuffle=True, num_workers=4)`, tags: ["data", "fundamental"] },
+      { name: "torchvision.transforms", brief: "Image preprocessing and augmentation pipeline", code: `from torchvision import transforms
+tfm = transforms.Compose([
+    transforms.Resize((224, 224)),
+    transforms.RandomHorizontalFlip(),
+    transforms.RandomRotation(15),
+    transforms.ColorJitter(brightness=0.2),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485,0.456,0.406],
+                         std=[0.229,0.224,0.225]),
+])`, tags: ["data", "vision", "augment"] },
+      { name: "torchvision.datasets", brief: "Pre-built datasets: MNIST, CIFAR, ImageNet…", code: `from torchvision import datasets
+train = datasets.MNIST('./data', train=True,
+                       download=True, transform=tfm)
+val = datasets.ImageFolder('./val_dir', transform=tfm)
+# Also: CIFAR10, CelebA, VOC, Kitti, etc.`, tags: ["data", "vision"] },
+      { name: "torch.utils.data.random_split", brief: "Split dataset into train/val/test subsets", code: `n = len(dataset)
+train_ds, val_ds = random_split(
+    dataset,
+    [int(0.8*n), n - int(0.8*n)],
+    generator=torch.Generator().manual_seed(42)
+)`, tags: ["data"] },
+    ]
+  },
+  {
+    id: "functional",
+    name: "torch.nn.functional",
+    color: "#eab308",
+    commands: [
+      { name: "F.relu / F.gelu / F.sigmoid", brief: "Stateless activation functions (no learned params)", code: `import torch.nn.functional as F
+x = F.relu(x)
+x = F.gelu(x)
+x = F.sigmoid(x)
+x = F.softmax(x, dim=1)
+x = F.log_softmax(x, dim=1)`, tags: ["functional", "activation"] },
+      { name: "F.cross_entropy()", brief: "Functional cross-entropy — same as nn.CrossEntropyLoss", code: `loss = F.cross_entropy(logits, targets)
+loss = F.cross_entropy(logits, targets,
+                       weight=class_weights,
+                       label_smoothing=0.1)`, tags: ["functional", "loss"] },
+      { name: "F.conv2d()", brief: "Apply convolution directly without a layer object", code: `# Custom kernel
+kernel = torch.randn(1, 1, 3, 3)
+out = F.conv2d(x, kernel, padding=1)
+
+# Used in custom layers / meta-learning`, tags: ["functional", "cnn"] },
+      { name: "F.interpolate()", brief: "Resize feature maps — used in decoders and U-Nets", code: `up = F.interpolate(x, scale_factor=2,
+                   mode='bilinear',
+                   align_corners=False)
+# Also: 'nearest', 'bicubic', 'trilinear'`, tags: ["functional", "vision"] },
+      { name: "F.normalize()", brief: "L2 normalize embeddings or feature vectors", code: `x_norm = F.normalize(x, p=2, dim=1)
+# Used in contrastive learning, cosine similarity
+sim = F.cosine_similarity(a, b, dim=-1)`, tags: ["functional", "embedding"] },
+    ]
+  },
+  {
+    id: "training",
+    name: "Training Utilities",
+    color: "#64748b",
+    commands: [
+      { name: "Full training loop", brief: "Standard epoch-level training pattern in PyTorch", code: `model.train()
+for epoch in range(num_epochs):
+    for X, y in train_loader:
+        X, y = X.to(device), y.to(device)
+        optimizer.zero_grad()
+        out = model(X)
+        loss = criterion(out, y)
+        loss.backward()
+        optimizer.step()
+    scheduler.step()`, tags: ["training", "fundamental"] },
+      { name: "torch.cuda.amp (mixed precision)", brief: "FP16 training with automatic loss scaling — 2-4× faster", code: `from torch.cuda.amp import autocast, GradScaler
+scaler = GradScaler()
+
+with autocast():
+    out = model(X)
+    loss = criterion(out, y)
+
+scaler.scale(loss).backward()
+scaler.step(optimizer)
+scaler.update()`, tags: ["training", "performance"] },
+      { name: "torch.manual_seed()", brief: "Set random seed for reproducibility", code: `torch.manual_seed(42)
+torch.cuda.manual_seed_all(42)
+import numpy as np; np.random.seed(42)
+import random; random.seed(42)
+# For full reproducibility:
+torch.backends.cudnn.deterministic = True`, tags: ["training", "reproducibility"] },
+      { name: "torchsummary / model inspection", brief: "Inspect model architecture and parameter counts", code: `from torchsummary import summary
+summary(model, input_size=(3, 224, 224))
+
+# Built-in
+print(model)
+total = sum(p.numel() for p in model.parameters())
+print(f'{total:,} parameters')`, tags: ["model", "debug"] },
+    ]
+  }
+];
+
+function highlight(code) {
+  return code
+    .replace(/\b(import|from|class|def|return|for|in|with|if|else|True|False|None|not)\b/g, '<span class="kw">$1</span>')
+    .replace(/\b(torch|nn|F|optim|transforms|datasets|DataLoader|Dataset)\b/g, '<span class="fn">$1</span>')
+    .replace(/(#.+)/g, '<span class="cm">$1</span>')
+    .replace(/('[\w./_\-\s]*'|"[\w./_\-\s]*")/g, '<span class="st">$1</span>')
+    .replace(/\b(\d+(?:\.\d+)?(?:e-?\d+)?)\b/g, '<span class="nm">$1</span>');
+}
+
+function buildUI() {
+  const main = document.getElementById('main');
+  const filterBtns = document.getElementById('filter-btns');
+  let totalCmds = 0;
+
+  CATEGORIES.forEach(cat => {
+    totalCmds += cat.commands.length;
+
+    // Filter button
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn';
+    btn.dataset.filter = cat.id;
+    btn.textContent = cat.name;
+    filterBtns.appendChild(btn);
+
+    // Category section
+    const section = document.createElement('div');
+    section.className = 'category';
+    section.dataset.catId = cat.id;
+
+    section.innerHTML = `
+      <div class="cat-header">
+        <div class="cat-dot" style="background:${cat.color}"></div>
+        <div class="cat-title" style="color:${cat.color}">${cat.name}</div>
+        <div class="cat-line"></div>
+        <div class="cat-count">${cat.commands.length} commands</div>
+      </div>
+      <div class="cards-grid"></div>
+    `;
+
+    const grid = section.querySelector('.cards-grid');
+
+    cat.commands.forEach(cmd => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.style.setProperty('--cat-color', cat.color);
+      card.dataset.name = cmd.name.toLowerCase();
+      card.dataset.tags = cmd.tags.join(' ');
+      card.dataset.catId = cat.id;
+
+      const tagHTML = cmd.tags.map(t =>
+        `<span class="tag" style="color:${cat.color};border-color:${cat.color}33">${t}</span>`
+      ).join('');
+
+      card.innerHTML = `
+        <div class="card-top">
+          <div class="card-name">${cmd.name}</div>
+          <div class="card-toggle">▼</div>
+        </div>
+        <div class="card-brief">${cmd.brief}</div>
+        <div class="card-detail">
+          <div>
+            <div class="detail-label">Usage</div>
+            <div class="code-block">${highlight(cmd.code)}</div>
+          </div>
+          <div class="tags">${tagHTML}</div>
+        </div>
+      `;
+
+      card.addEventListener('click', () => {
+        card.classList.toggle('open');
+      });
+
+      grid.appendChild(card);
+    });
+
+    main.appendChild(section);
+  });
+
+  document.getElementById('total-count').textContent = totalCmds;
+  document.getElementById('cat-count').textContent = CATEGORIES.length;
+
+  // Filter logic
+  filterBtns.addEventListener('click', e => {
+    if (!e.target.classList.contains('filter-btn')) return;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    const filter = e.target.dataset.filter;
+    document.querySelectorAll('.category').forEach(sec => {
+      if (filter === 'all' || sec.dataset.catId === filter) {
+        sec.classList.remove('hidden');
+      } else {
+        sec.classList.add('hidden');
+      }
+    });
+  });
+
+  // Search logic
+  document.getElementById('search').addEventListener('input', e => {
+    const q = e.target.value.toLowerCase().trim();
+    // Reset filter buttons
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.filter-btn[data-filter="all"]').classList.add('active');
+
+    document.querySelectorAll('.category').forEach(sec => {
+      sec.classList.remove('hidden');
+    });
+
+    if (!q) {
+      document.querySelectorAll('.card').forEach(c => c.classList.remove('hidden'));
+      return;
+    }
+
+    document.querySelectorAll('.card').forEach(card => {
+      const match = card.dataset.name.includes(q) ||
+                    card.dataset.tags.includes(q) ||
+                    card.querySelector('.card-brief').textContent.toLowerCase().includes(q);
+      card.classList.toggle('hidden', !match);
+    });
+
+    // Hide empty categories
+    document.querySelectorAll('.category').forEach(sec => {
+      const visible = [...sec.querySelectorAll('.card')].some(c => !c.classList.contains('hidden'));
+      sec.classList.toggle('hidden', !visible);
+    });
+  });
+}
+
+buildUI();
+</script>
+</body>
+</html>
