@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NumPy API Reference</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --surface2: #181c24;
+    --border: #1e2330;
+    --accent: #4ade80;
+    --accent2: #22d3ee;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --code: #94a3b8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Teal glow top-right */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -150px;
+    right: -150px;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(34,211,238,0.055) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .back-nav {
+    position: relative;
+    z-index: 1;
+    padding: 16px 40px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .back-nav a {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-decoration: none;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: color 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .back-nav a:hover { color: var(--accent); }
+
+  header {
+    position: relative;
+    z-index: 1;
+    padding: 48px 40px 32px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .logo-area h1 {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 800;
+    letter-spacing: -2px;
+    line-height: 1;
+    background: linear-gradient(135deg, #4ade80 0%, #22d3ee 60%, #818cf8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .logo-area .subtitle {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+
+  .stats { display: flex; gap: 24px; flex-wrap: wrap; }
+
+  .stat { text-align: right; }
+
+  .stat-num {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+
+  .search-bar {
+    position: relative;
+    z-index: 1;
+    padding: 20px 40px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .search-input {
+    flex: 1;
+    min-width: 200px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    padding: 10px 16px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .search-input::placeholder { color: var(--muted); }
+  .search-input:focus { border-color: var(--accent); }
+
+  .filter-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .filter-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+
+  .filter-btn:hover, .filter-btn.active {
+    background: var(--surface2);
+    color: var(--text);
+    border-color: var(--muted);
+  }
+
+  .filter-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  main {
+    position: relative;
+    z-index: 1;
+    padding: 32px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  .category { display: flex; flex-direction: column; gap: 16px; }
+
+  .cat-header { display: flex; align-items: center; gap: 16px; }
+
+  .cat-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+  .cat-title {
+    font-size: 0.7rem;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+
+  .cat-line { flex: 1; height: 1px; background: var(--border); }
+
+  .cat-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+  }
+
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--cat-color);
+    transform: scaleY(0);
+    transition: transform 0.2s;
+    transform-origin: bottom;
+  }
+
+  .card:hover::before, .card.open::before { transform: scaleY(1); }
+
+  .card:hover {
+    border-color: var(--cat-color);
+    background: var(--surface2);
+    transform: translateY(-1px);
+  }
+
+  .card.open { border-color: var(--cat-color); }
+
+  .card-top {
+    padding: 14px 16px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .card-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--cat-color);
+    word-break: break-all;
+    line-height: 1.4;
+  }
+
+  .card-toggle {
+    font-size: 0.65rem;
+    color: var(--muted);
+    flex-shrink: 0;
+    transition: transform 0.2s;
+    margin-top: 2px;
+  }
+
+  .card.open .card-toggle { transform: rotate(180deg); }
+
+  .card-brief {
+    font-size: 0.75rem;
+    color: var(--muted);
+    padding: 0 16px 12px;
+    line-height: 1.5;
+  }
+
+  .card-detail {
+    display: none;
+    border-top: 1px solid var(--border);
+    padding: 14px 16px;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .card.open .card-detail { display: flex; }
+
+  .detail-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+  }
+
+  .code-block {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 10px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--code);
+    line-height: 1.7;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  .code-block .kw  { color: #c792ea; }
+  .code-block .fn  { color: #82aaff; }
+  .code-block .st  { color: #c3e88d; }
+  .code-block .nm  { color: #f78c6c; }
+  .code-block .cm  { color: #546e7a; }
+
+  .tags { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    padding: 3px 8px;
+    border: 1px solid;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .hidden { display: none !important; }
+
+  footer {
+    position: relative;
+    z-index: 1;
+    padding: 24px 40px;
+    border-top: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 1px;
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 600px) {
+    .back-nav, header, .search-bar, main, footer { padding-left: 20px; padding-right: 20px; }
+    .cards-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="back-nav">
+  <a href="index.html">← Back to index</a>
+</div>
+
+<header>
+  <div class="logo-area">
+    <h1>NumPy API</h1>
+    <div class="subtitle">Scientific Computing Command Reference</div>
+  </div>
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-num" id="total-count">0</div>
+      <div class="stat-label">Commands</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" id="cat-count">0</div>
+      <div class="stat-label">Categories</div>
+    </div>
+  </div>
+</header>
+
+<div class="search-bar">
+  <input class="search-input" type="text" placeholder="Search commands... (e.g. reshape, dot, argmax)" id="search" />
+  <div class="filter-btns" id="filter-btns">
+    <button class="filter-btn active" data-filter="all">All</button>
+  </div>
+</div>
+
+<main id="main"></main>
+
+<footer>
+  <span>Click any card to expand with usage examples</span>
+  <span>NumPy 2.x · Frank Lato · BIOE 486</span>
+</footer>
+
+<script>
+const CATEGORIES = [
+  {
+    id: "array_creation",
+    name: "Array Creation",
+    color: "#4ade80",
+    commands: [
+      { name: "np.array()", brief: "Create an ndarray from Python lists or nested sequences", code: `a = np.array([1, 2, 3])                    # 1D
+b = np.array([[1, 2], [3, 4]])             # 2D
+c = np.array([1.0, 2.0], dtype=np.float32)`, tags: ["creation", "fundamental"] },
+      { name: "np.zeros / np.ones / np.full", brief: "Initialize arrays with constant values", code: `z = np.zeros((3, 4))              # all 0.0
+o = np.ones((2, 5), dtype=int)    # all 1
+f = np.full((3, 3), fill_value=7) # all 7`, tags: ["creation", "init"] },
+      { name: "np.arange / np.linspace", brief: "Create evenly spaced sequences", code: `a = np.arange(0, 10, 2)           # [0,2,4,6,8]
+l = np.linspace(0.0, 1.0, 100)   # 100 points
+g = np.geomspace(1, 1000, 4)     # geometric`, tags: ["creation", "range"] },
+      { name: "np.random.*", brief: "Random array generation", code: `np.random.seed(42)
+r = np.random.rand(3, 4)          # uniform [0,1)
+n = np.random.randn(8, 8)         # std normal
+i = np.random.randint(0, 10, (5,))# int [0,10)
+s = np.random.choice(arr, size=5) # sampling`, tags: ["creation", "random"] },
+      { name: "np.eye / np.identity / np.diag", brief: "Identity matrices and diagonal arrays", code: `I = np.eye(4)               # 4x4 identity
+d = np.diag([1, 2, 3])     # diagonal matrix
+v = np.diag(A)              # extract diagonal`, tags: ["creation", "linear-algebra"] },
+      { name: "np.meshgrid", brief: "Coordinate grids for vectorized evaluation over a 2D domain", code: `x = np.linspace(-1, 1, 100)
+y = np.linspace(-1, 1, 100)
+XX, YY = np.meshgrid(x, y)
+Z = np.sin(XX) * np.cos(YY)  # shape (100,100)`, tags: ["creation", "grid"] },
+    ]
+  },
+  {
+    id: "shape",
+    name: "Shape & Indexing",
+    color: "#22d3ee",
+    commands: [
+      { name: ".shape / .ndim / .size", brief: "Inspect array dimensions and element count", code: `a = np.zeros((3, 4, 5))
+a.shape   # (3, 4, 5)
+a.ndim    # 3
+a.size    # 60
+a.dtype   # float64`, tags: ["shape", "inspection"] },
+      { name: ".reshape() / .ravel() / .flatten()", brief: "Change array shape without (or with) copying", code: `a = np.arange(24)
+b = a.reshape(4, 6)       # view if possible
+c = a.reshape(2, 3, 4)
+flat = b.ravel()          # view → 1D
+copy = b.flatten()        # always copies`, tags: ["shape"] },
+      { name: "np.expand_dims / np.squeeze", brief: "Add or remove size-1 axes", code: `x = np.zeros((64,))
+x = np.expand_dims(x, axis=0)  # (1, 64)
+x = np.expand_dims(x, axis=-1) # (1, 64, 1)
+x = np.squeeze(x)              # back to (64,)`, tags: ["shape"] },
+      { name: "np.transpose / .T", brief: "Permute axes of an array", code: `A = np.random.randn(3, 4)
+AT = A.T                       # (4, 3)
+B = np.random.randn(2, 3, 4)
+BT = np.transpose(B, (0, 2, 1)) # (2, 4, 3)`, tags: ["shape"] },
+      { name: "Slicing & fancy indexing", brief: "Select subarrays by index, slice, or boolean mask", code: `a = np.arange(10)
+a[2:7]          # [2,3,4,5,6]
+a[::2]          # every other element
+a[[0, 3, 7]]    # fancy indexing
+
+A = np.random.randn(5, 5)
+A[A > 0]        # boolean mask → 1D
+A[:, 2]         # column 2`, tags: ["indexing"] },
+      { name: "np.where", brief: "Conditional element selection or index lookup", code: `# Element-wise conditional
+out = np.where(x > 0, x, 0)   # ReLU!
+
+# Get indices satisfying condition
+idx = np.where(x > 0.5)       # tuple of arrays
+rows, cols = np.where(A > 0)`, tags: ["indexing", "conditional"] },
+    ]
+  },
+  {
+    id: "math",
+    name: "Math & Statistics",
+    color: "#818cf8",
+    commands: [
+      { name: "Elementwise arithmetic", brief: "Broadcasting-aware elementwise operations", code: `a + b, a - b, a * b, a / b   # broadcast
+a ** 2                         # element power
+np.sqrt(a), np.abs(a)
+np.exp(a), np.log(a), np.log2(a)
+np.clip(a, 0, 1)               # clamp values`, tags: ["math", "fundamental"] },
+      { name: "np.sum / np.mean / np.std", brief: "Reduction statistics along an axis or over all elements", code: `a = np.random.randn(4, 5)
+np.sum(a)             # scalar
+np.sum(a, axis=0)     # sum over rows → (5,)
+np.mean(a, axis=1)    # mean over cols → (4,)
+np.std(a)
+np.var(a)
+np.median(a)`, tags: ["stats", "reduction"] },
+      { name: "np.min / np.max / np.argmin / np.argmax", brief: "Find extreme values and their indices", code: `a.min(), a.max()
+a.argmin(), a.argmax()          # flat index
+a.min(axis=0)                   # col mins
+a.argmax(axis=1)                # row argmax`, tags: ["stats", "reduction"] },
+      { name: "np.cumsum / np.diff / np.gradient", brief: "Cumulative sums, differences, and numerical gradients", code: `a = np.array([1, 2, 4, 7, 11])
+np.cumsum(a)      # [1, 3, 7, 14, 25]
+np.diff(a)        # [1, 2, 3, 4]
+np.gradient(a)    # central differences`, tags: ["math", "calculus"] },
+      { name: "np.sort / np.argsort", brief: "Sort arrays or get sorting indices", code: `a = np.array([3, 1, 4, 1, 5, 9])
+np.sort(a)              # sorted copy
+np.argsort(a)           # indices that sort a
+a.sort()                # in-place sort
+np.sort(A, axis=0)      # sort rows of 2D`, tags: ["sorting"] },
+      { name: "np.unique / np.bincount / np.histogram", brief: "Unique values and frequency counting", code: `np.unique(a)                   # unique values
+np.unique(a, return_counts=True)
+np.bincount(a.astype(int))     # count ints
+counts, bins = np.histogram(a, bins=10)`, tags: ["stats", "counting"] },
+    ]
+  },
+  {
+    id: "linalg",
+    name: "Linear Algebra",
+    color: "#fb7185",
+    commands: [
+      { name: "np.dot / np.matmul / @", brief: "Matrix and vector multiplication", code: `# Matrix multiply
+C = np.dot(A, B)
+C = np.matmul(A, B)
+C = A @ B               # preferred in modern code
+
+# Batched
+C = np.einsum('ij,jk->ik', A, B)`, tags: ["linalg", "fundamental"] },
+      { name: "np.linalg.inv / solve", brief: "Matrix inverse and linear system solver", code: `A_inv = np.linalg.inv(A)
+# Solve Ax = b (preferred over inv)
+x = np.linalg.solve(A, b)`, tags: ["linalg"] },
+      { name: "np.linalg.eig / eigh", brief: "Eigendecomposition — used in PCA, spectral methods", code: `eigenvalues, eigenvectors = np.linalg.eig(A)
+# For symmetric matrices (more stable):
+vals, vecs = np.linalg.eigh(A)`, tags: ["linalg", "decomp"] },
+      { name: "np.linalg.svd", brief: "Singular value decomposition — backbone of PCA/LSA", code: `U, S, Vt = np.linalg.svd(A)
+# Truncated (rank-k approx):
+U, S, Vt = np.linalg.svd(A, full_matrices=False)
+A_k = (U[:, :k] * S[:k]) @ Vt[:k, :]`, tags: ["linalg", "decomp"] },
+      { name: "np.linalg.norm", brief: "Vector and matrix norms", code: `np.linalg.norm(v)             # L2 (Euclidean)
+np.linalg.norm(v, ord=1)      # L1
+np.linalg.norm(v, ord=np.inf) # L∞
+np.linalg.norm(A, 'fro')      # Frobenius`, tags: ["linalg"] },
+      { name: "np.linalg.det / matrix_rank", brief: "Determinant and rank of a matrix", code: `d = np.linalg.det(A)
+r = np.linalg.matrix_rank(A)`, tags: ["linalg"] },
+    ]
+  },
+  {
+    id: "array_ops",
+    name: "Array Operations",
+    color: "#fbbf24",
+    commands: [
+      { name: "np.concatenate / np.stack / np.vstack / np.hstack", brief: "Combine arrays along existing or new axes", code: `np.concatenate([a, b], axis=0)  # join existing
+np.stack([a, b], axis=0)        # new axis
+np.vstack([a, b])               # row stack
+np.hstack([a, b])               # column stack`, tags: ["combine"] },
+      { name: "np.split / np.array_split", brief: "Divide an array into sub-arrays", code: `parts = np.split(a, 3)                # equal thirds
+parts = np.split(a, [2, 5])           # at indices 2, 5
+parts = np.array_split(a, 4)          # unequal ok`, tags: ["split"] },
+      { name: "np.tile / np.repeat", brief: "Repeat or tile arrays for broadcasting setup", code: `a = np.array([1, 2, 3])
+np.tile(a, 3)     # [1,2,3,1,2,3,1,2,3]
+np.tile(a, (2,3)) # 2D tiling
+np.repeat(a, 2)   # [1,1,2,2,3,3]`, tags: ["repeat"] },
+      { name: "np.pad", brief: "Pad array edges — common in image processing / CNNs", code: `# Zero-pad 2D array
+np.pad(A, pad_width=1)              # 1px all sides
+np.pad(A, ((1,1),(2,2)))            # asymmetric
+np.pad(A, 1, mode='reflect')        # mirror padding`, tags: ["image", "padding"] },
+      { name: "np.apply_along_axis", brief: "Apply a function along a specific axis", code: `# Normalize each row
+def normalize(v): return v / np.linalg.norm(v)
+result = np.apply_along_axis(normalize, axis=1, arr=A)`, tags: ["functional"] },
+    ]
+  },
+  {
+    id: "image",
+    name: "Image & Signal",
+    color: "#34d399",
+    commands: [
+      { name: "Array as image (HWC / CHW)", brief: "NumPy array conventions for image data", code: `# HWC format (matplotlib/skimage default)
+img = np.zeros((256, 256, 3), dtype=np.uint8)
+
+# CHW format (PyTorch)
+img_chw = img.transpose(2, 0, 1)   # (3,H,W)
+
+# Normalize to [0,1]
+img_f = img.astype(np.float32) / 255.0`, tags: ["image", "fundamental"] },
+      { name: "np.fft.fft2 / np.fft.fftshift", brief: "2D Discrete Fourier Transform — core of frequency analysis", code: `F = np.fft.fft2(img_gray)
+F_shift = np.fft.fftshift(F)       # center DC
+magnitude = np.log(np.abs(F_shift) + 1)
+
+# Inverse
+img_rec = np.real(np.fft.ifft2(np.fft.ifftshift(F_shift)))`, tags: ["fft", "signal"] },
+      { name: "np.convolve / np.correlate", brief: "1D convolution and cross-correlation", code: `signal = np.random.randn(1000)
+kernel = np.array([0.25, 0.5, 0.25])  # blur
+out = np.convolve(signal, kernel, mode='same')`, tags: ["signal", "convolution"] },
+      { name: "Histogram equalization helpers", brief: "Use NumPy to compute intensity histograms for images", code: `hist, bins = np.histogram(img.ravel(), bins=256, range=(0,256))
+cdf = np.cumsum(hist)
+cdf_norm = (cdf - cdf.min()) * 255 / (cdf.max() - cdf.min())
+img_eq = cdf_norm[img]  # LUT lookup`, tags: ["image", "histogram"] },
+    ]
+  },
+  {
+    id: "io_casting",
+    name: "I/O & Type Casting",
+    color: "#a78bfa",
+    commands: [
+      { name: ".astype()", brief: "Cast array to a different dtype", code: `a = np.array([1, 2, 3])
+a.astype(np.float32)
+a.astype(np.float64)
+a.astype(bool)           # nonzero → True
+a.astype(np.uint8)       # for image saving`, tags: ["dtype", "cast"] },
+      { name: "np.save / np.load / np.savez", brief: "Persist arrays to .npy / .npz files", code: `np.save('weights.npy', arr)        # single array
+arr = np.load('weights.npy')
+
+np.savez('data.npz', X=X, y=y)    # multiple
+data = np.load('data.npz')
+X, y = data['X'], data['y']`, tags: ["io"] },
+      { name: "np.savetxt / np.loadtxt / np.genfromtxt", brief: "Read and write plain text / CSV data", code: `np.savetxt('data.csv', A, delimiter=',', fmt='%.4f')
+A = np.loadtxt('data.csv', delimiter=',')
+A = np.genfromtxt('data.csv', delimiter=',',
+                  skip_header=1)  # handles missing`, tags: ["io", "csv"] },
+      { name: "np.frombuffer / np.fromfile", brief: "Load raw binary data into an ndarray", code: `# From bytes (e.g. socket/image buffer)
+arr = np.frombuffer(buffer, dtype=np.uint8)
+arr = arr.reshape(H, W, C)`, tags: ["io", "binary"] },
+    ]
+  },
+  {
+    id: "broadcasting",
+    name: "Broadcasting & Vectorization",
+    color: "#f472b6",
+    commands: [
+      { name: "Broadcasting rules", brief: "Align shapes from the right; size-1 dims expand automatically", code: `# Subtract mean from each row
+X = np.random.randn(100, 784)
+X_centered = X - X.mean(axis=0)  # (100,784) - (784,)
+
+# Outer product via broadcasting
+a = np.array([1,2,3])[:, None]   # (3,1)
+b = np.array([10,20])            # (2,)
+a * b   # → (3,2)`, tags: ["broadcast", "fundamental"] },
+      { name: "np.einsum()", brief: "Einstein summation — expressive batched tensor contractions", code: `# Matrix multiply
+C = np.einsum('ij,jk->ik', A, B)
+# Batch matrix multiply
+C = np.einsum('bij,bjk->bik', A, B)
+# Trace
+t = np.einsum('ii->', A)
+# Outer product
+O = np.einsum('i,j->ij', a, b)`, tags: ["broadcast", "linalg"] },
+      { name: "np.vectorize", brief: "Vectorize a scalar Python function over arrays", code: `def my_fn(x, y): return x**2 + y if x > 0 else y
+vfn = np.vectorize(my_fn)
+result = vfn(X, Y)   # applied elementwise
+# Note: convenience wrapper, not truly fast`, tags: ["vectorize"] },
+    ]
+  }
+];
+
+function highlight(code) {
+  return code
+    .replace(/\b(import|from|def|return|for|in|if|else|True|False|None|not|as)\b/g, '<span class="kw">$1</span>')
+    .replace(/\b(np|numpy)\b/g, '<span class="fn">$1</span>')
+    .replace(/(#.+)/g, '<span class="cm">$1</span>')
+    .replace(/('[\w./_\-\s]*'|"[\w./_\-\s]*")/g, '<span class="st">$1</span>')
+    .replace(/\b(\d+(?:\.\d+)?(?:e-?\d+)?)\b/g, '<span class="nm">$1</span>');
+}
+
+function buildUI() {
+  const main = document.getElementById('main');
+  const filterBtns = document.getElementById('filter-btns');
+  let totalCmds = 0;
+
+  CATEGORIES.forEach(cat => {
+    totalCmds += cat.commands.length;
+
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn';
+    btn.dataset.filter = cat.id;
+    btn.textContent = cat.name;
+    filterBtns.appendChild(btn);
+
+    const section = document.createElement('div');
+    section.className = 'category';
+    section.dataset.catId = cat.id;
+
+    section.innerHTML = `
+      <div class="cat-header">
+        <div class="cat-dot" style="background:${cat.color}"></div>
+        <div class="cat-title" style="color:${cat.color}">${cat.name}</div>
+        <div class="cat-line"></div>
+        <div class="cat-count">${cat.commands.length} commands</div>
+      </div>
+      <div class="cards-grid"></div>
+    `;
+
+    const grid = section.querySelector('.cards-grid');
+
+    cat.commands.forEach(cmd => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.style.setProperty('--cat-color', cat.color);
+      card.dataset.name = cmd.name.toLowerCase();
+      card.dataset.tags = cmd.tags.join(' ');
+      card.dataset.catId = cat.id;
+
+      const tagHTML = cmd.tags.map(t =>
+        `<span class="tag" style="color:${cat.color};border-color:${cat.color}33">${t}</span>`
+      ).join('');
+
+      card.innerHTML = `
+        <div class="card-top">
+          <div class="card-name">${cmd.name}</div>
+          <div class="card-toggle">▼</div>
+        </div>
+        <div class="card-brief">${cmd.brief}</div>
+        <div class="card-detail">
+          <div>
+            <div class="detail-label">Usage</div>
+            <div class="code-block">${highlight(cmd.code)}</div>
+          </div>
+          <div class="tags">${tagHTML}</div>
+        </div>
+      `;
+
+      card.addEventListener('click', () => card.classList.toggle('open'));
+      grid.appendChild(card);
+    });
+
+    main.appendChild(section);
+  });
+
+  document.getElementById('total-count').textContent = totalCmds;
+  document.getElementById('cat-count').textContent = CATEGORIES.length;
+
+  filterBtns.addEventListener('click', e => {
+    if (!e.target.classList.contains('filter-btn')) return;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    const filter = e.target.dataset.filter;
+    document.querySelectorAll('.category').forEach(sec => {
+      sec.classList.toggle('hidden', filter !== 'all' && sec.dataset.catId !== filter);
+    });
+  });
+
+  document.getElementById('search').addEventListener('input', e => {
+    const q = e.target.value.toLowerCase().trim();
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.filter-btn[data-filter="all"]').classList.add('active');
+    document.querySelectorAll('.category').forEach(s => s.classList.remove('hidden'));
+
+    if (!q) {
+      document.querySelectorAll('.card').forEach(c => c.classList.remove('hidden'));
+      return;
+    }
+
+    document.querySelectorAll('.card').forEach(card => {
+      const match = card.dataset.name.includes(q) ||
+                    card.dataset.tags.includes(q) ||
+                    card.querySelector('.card-brief').textContent.toLowerCase().includes(q);
+      card.classList.toggle('hidden', !match);
+    });
+
+    document.querySelectorAll('.category').forEach(sec => {
+      const visible = [...sec.querySelectorAll('.card')].some(c => !c.classList.contains('hidden'));
+      sec.classList.toggle('hidden', !visible);
+    });
+  });
+}
+
+buildUI();
+</script>
+</body>
+</html>
