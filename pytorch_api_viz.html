@@ -358,13 +358,39 @@
     flex-wrap: wrap;
   }
 
+  .back-nav {
+    position: relative;
+    z-index: 1;
+    padding: 16px 40px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .back-nav a {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-decoration: none;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: color 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .back-nav a:hover { color: var(--accent); }
+
   @media (max-width: 600px) {
-    header, main, .search-bar, footer { padding-left: 20px; padding-right: 20px; }
+    header, main, .search-bar, footer, .back-nav { padding-left: 20px; padding-right: 20px; }
     .cards-grid { grid-template-columns: 1fr; }
   }
 </style>
 </head>
 <body>
+
+<div class="back-nav">
+  <a href="index.html">← Back to index</a>
+</div>
 
 <header>
   <div class="logo-area">
@@ -394,7 +420,7 @@
 
 <footer>
   <span>Click any card to expand with usage examples</span>
-  <span>PyTorch 2.x · Frank Lato · BIOE 486</span>
+  <span>PyTorch 2.x · Frank Lato</span>
 </footer>
 
 <script>
