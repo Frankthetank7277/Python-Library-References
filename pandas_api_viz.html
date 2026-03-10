@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pandas API Reference</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --surface2: #181c24;
+    --border: #1e2330;
+    --accent: #f59e0b;
+    --accent2: #ef4444;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --code: #94a3b8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -150px;
+    left: -150px;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(245,158,11,0.055) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .back-nav {
+    position: relative;
+    z-index: 1;
+    padding: 16px 40px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .back-nav a {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-decoration: none;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: color 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .back-nav a:hover { color: var(--accent); }
+
+  header {
+    position: relative;
+    z-index: 1;
+    padding: 48px 40px 32px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .logo-area h1 {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 800;
+    letter-spacing: -2px;
+    line-height: 1;
+    background: linear-gradient(135deg, #f59e0b 0%, #ef4444 55%, #ec4899 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .logo-area .subtitle {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+
+  .stats { display: flex; gap: 24px; flex-wrap: wrap; }
+  .stat { text-align: right; }
+  .stat-num {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .stat-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+
+  .search-bar {
+    position: relative;
+    z-index: 1;
+    padding: 20px 40px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .search-input {
+    flex: 1;
+    min-width: 200px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    padding: 10px 16px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-input::placeholder { color: var(--muted); }
+  .search-input:focus { border-color: var(--accent); }
+
+  .filter-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .filter-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  .filter-btn:hover, .filter-btn.active {
+    background: var(--surface2);
+    color: var(--text);
+    border-color: var(--muted);
+  }
+  .filter-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  main {
+    position: relative;
+    z-index: 1;
+    padding: 32px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  .category { display: flex; flex-direction: column; gap: 16px; }
+  .cat-header { display: flex; align-items: center; gap: 16px; }
+  .cat-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .cat-title {
+    font-size: 0.7rem;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  .cat-line { flex: 1; height: 1px; background: var(--border); }
+  .cat-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+  }
+
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s;
+    overflow: hidden;
+    position: relative;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--cat-color);
+    transform: scaleY(0);
+    transition: transform 0.2s;
+    transform-origin: bottom;
+  }
+  .card:hover::before, .card.open::before { transform: scaleY(1); }
+  .card:hover {
+    border-color: var(--cat-color);
+    background: var(--surface2);
+    transform: translateY(-1px);
+  }
+  .card.open { border-color: var(--cat-color); }
+
+  .card-top {
+    padding: 14px 16px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .card-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--cat-color);
+    word-break: break-all;
+    line-height: 1.4;
+  }
+  .card-toggle {
+    font-size: 0.65rem;
+    color: var(--muted);
+    flex-shrink: 0;
+    transition: transform 0.2s;
+    margin-top: 2px;
+  }
+  .card.open .card-toggle { transform: rotate(180deg); }
+
+  .card-brief {
+    font-size: 0.75rem;
+    color: var(--muted);
+    padding: 0 16px 12px;
+    line-height: 1.5;
+  }
+
+  .card-detail {
+    display: none;
+    border-top: 1px solid var(--border);
+    padding: 14px 16px;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .card.open .card-detail { display: flex; }
+
+  .detail-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+  }
+
+  .code-block {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 10px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--code);
+    line-height: 1.7;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .code-block .kw  { color: #c792ea; }
+  .code-block .fn  { color: #82aaff; }
+  .code-block .st  { color: #c3e88d; }
+  .code-block .nm  { color: #f78c6c; }
+  .code-block .cm  { color: #546e7a; }
+
+  .tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    padding: 3px 8px;
+    border: 1px solid;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .hidden { display: none !important; }
+
+  footer {
+    position: relative;
+    z-index: 1;
+    padding: 24px 40px;
+    border-top: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 1px;
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 600px) {
+    .back-nav, header, .search-bar, main, footer { padding-left: 20px; padding-right: 20px; }
+    .cards-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="back-nav">
+  <a href="index.html">← Back to index</a>
+</div>
+
+<header>
+  <div class="logo-area">
+    <h1>Pandas API</h1>
+    <div class="subtitle">Data Analysis Command Reference</div>
+  </div>
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-num" id="total-count">0</div>
+      <div class="stat-label">Commands</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" id="cat-count">0</div>
+      <div class="stat-label">Categories</div>
+    </div>
+  </div>
+</header>
+
+<div class="search-bar">
+  <input class="search-input" type="text" placeholder="Search commands... (e.g. groupby, merge, pivot)" id="search" />
+  <div class="filter-btns" id="filter-btns">
+    <button class="filter-btn active" data-filter="all">All</button>
+  </div>
+</div>
+
+<main id="main"></main>
+
+<footer>
+  <span>Click any card to expand with usage examples</span>
+  <span>Pandas 2.x · Frank Lato</span>
+</footer>
+
+<script>
+const CATEGORIES = [
+  {
+    id: "creation",
+    name: "Creating DataFrames",
+    color: "#f59e0b",
+    commands: [
+      { name: "pd.DataFrame()", brief: "Construct a DataFrame from dicts, lists, NumPy arrays, or other DataFrames", code: `import pandas as pd
+
+# From dict of lists
+df = pd.DataFrame({'A': [1,2,3], 'B': [4,5,6]})
+
+# From list of dicts
+df = pd.DataFrame([{'x': 1, 'y': 2}, {'x': 3, 'y': 4}])
+
+# From NumPy array
+df = pd.DataFrame(arr, columns=['a','b','c'])`, tags: ["creation", "fundamental"] },
+      { name: "pd.Series()", brief: "Create a 1D labeled array — the building block of DataFrames", code: `s = pd.Series([1, 2, 3, 4])
+s = pd.Series({'a': 1, 'b': 2, 'c': 3})
+s = pd.Series(np.arange(10), name='values')`, tags: ["creation", "fundamental"] },
+      { name: "pd.read_csv() / read_excel() / read_json()", brief: "Load tabular data from files into a DataFrame", code: `df = pd.read_csv('data.csv')
+df = pd.read_csv('data.csv', index_col=0,
+                 parse_dates=['date'],
+                 na_values=['NA', '?'])
+df = pd.read_excel('data.xlsx', sheet_name='Sheet1')
+df = pd.read_json('data.json')`, tags: ["io", "creation"] },
+      { name: "pd.read_sql() / read_parquet()", brief: "Load data from SQL databases or Parquet files", code: `import sqlalchemy
+engine = sqlalchemy.create_engine('sqlite:///db.sqlite')
+df = pd.read_sql('SELECT * FROM table', engine)
+
+df = pd.read_parquet('data.parquet')
+df.to_parquet('output.parquet', index=False)`, tags: ["io", "creation"] },
+    ]
+  },
+  {
+    id: "inspection",
+    name: "Inspection & Info",
+    color: "#ef4444",
+    commands: [
+      { name: ".head() / .tail() / .sample()", brief: "Preview the first, last, or random rows of a DataFrame", code: `df.head()          # first 5 rows
+df.head(10)        # first 10
+df.tail(3)         # last 3
+df.sample(5)       # 5 random rows
+df.sample(frac=0.1)# 10% random sample`, tags: ["inspection"] },
+      { name: ".info() / .describe()", brief: "Summary of dtypes/nulls and descriptive statistics", code: `df.info()          # dtypes, non-null counts, memory
+df.describe()      # mean, std, min, quartiles, max
+df.describe(include='all')   # include categoricals
+df.describe(percentiles=[.1, .25, .75, .9])`, tags: ["inspection", "stats"] },
+      { name: ".shape / .dtypes / .columns / .index", brief: "Basic structural attributes of a DataFrame", code: `df.shape           # (rows, cols)
+df.dtypes          # dtype per column
+df.columns.tolist()
+df.index
+len(df)            # row count
+df.nunique()       # unique values per column`, tags: ["inspection", "fundamental"] },
+      { name: ".value_counts()", brief: "Frequency table for a column or Series", code: `df['col'].value_counts()           # absolute counts
+df['col'].value_counts(normalize=True) # proportions
+df['col'].value_counts(dropna=False)   # include NaN`, tags: ["inspection", "stats"] },
+    ]
+  },
+  {
+    id: "selection",
+    name: "Selection & Indexing",
+    color: "#ec4899",
+    commands: [
+      { name: ".loc[] / .iloc[]", brief: "Label-based and integer-based row/column selection", code: `# loc: label-based
+df.loc[0]                     # row by label
+df.loc[0:5, 'col_a':'col_c']  # slice by label
+df.loc[df['A'] > 0, 'B']      # boolean + column
+
+# iloc: position-based
+df.iloc[0]                    # first row
+df.iloc[:5, :3]               # first 5 rows, 3 cols
+df.iloc[[0, 2, 4], 1]         # fancy indexing`, tags: ["indexing", "fundamental"] },
+      { name: "Boolean indexing", brief: "Filter rows using logical conditions", code: `df[df['age'] > 30]
+df[(df['age'] > 30) & (df['city'] == 'Chicago')]
+df[df['name'].str.startswith('A')]
+df[df['score'].between(70, 90)]
+df[df['col'].isin(['a', 'b', 'c'])]`, tags: ["indexing", "filter"] },
+      { name: ".query()", brief: "Filter rows using a readable string expression", code: `df.query('age > 30')
+df.query('age > 30 and city == "Chicago"')
+threshold = 50
+df.query('score > @threshold')   # use Python var`, tags: ["indexing", "filter"] },
+      { name: ".at[] / .iat[]", brief: "Fast scalar access by label or integer position", code: `df.at[0, 'col_a']         # single value by label
+df.iat[0, 2]               # single value by position
+df.at[0, 'col_a'] = 99    # fast scalar assignment`, tags: ["indexing"] },
+    ]
+  },
+  {
+    id: "cleaning",
+    name: "Cleaning & Transformation",
+    color: "#a78bfa",
+    commands: [
+      { name: ".isna() / .fillna() / .dropna()", brief: "Detect, fill, and drop missing values", code: `df.isna().sum()              # null count per column
+df.isna().any(axis=1)        # rows with any null
+
+df.fillna(0)
+df.fillna({'col_a': 0, 'col_b': 'unknown'})
+df.fillna(method='ffill')    # forward fill
+
+df.dropna()                  # drop any row with null
+df.dropna(subset=['col_a'])  # only check col_a
+df.dropna(thresh=3)          # keep rows with ≥3 non-null`, tags: ["cleaning", "missing"] },
+      { name: ".astype()", brief: "Cast columns to a new dtype", code: `df['col'].astype(int)
+df['col'].astype(float)
+df['col'].astype(str)
+df['col'].astype('category')   # memory efficient
+df['date'].astype('datetime64[ns]')
+
+# Multiple at once
+df = df.astype({'A': int, 'B': float})`, tags: ["cleaning", "dtype"] },
+      { name: ".rename() / .drop()", brief: "Rename columns/index labels or drop rows/columns", code: `df.rename(columns={'old': 'new', 'x': 'y'})
+df.rename(index={0: 'first'})
+
+df.drop('col_a', axis=1)           # drop column
+df.drop(['col_a', 'col_b'], axis=1)
+df.drop(index=[0, 1, 2])           # drop rows`, tags: ["cleaning"] },
+      { name: ".duplicated() / .drop_duplicates()", brief: "Find and remove duplicate rows", code: `df.duplicated()               # bool mask
+df.duplicated(subset=['col_a', 'col_b'])
+df.duplicated().sum()         # count duplicates
+
+df.drop_duplicates()
+df.drop_duplicates(subset=['id'], keep='last')`, tags: ["cleaning"] },
+      { name: ".apply() / .map() / .applymap()", brief: "Apply functions element-wise, column-wise, or row-wise", code: `# Column-wise
+df['col'].apply(lambda x: x * 2)
+df.apply(lambda col: col.max() - col.min())  # per col
+
+# Row-wise
+df.apply(lambda row: row['a'] + row['b'], axis=1)
+
+# Element-wise (DataFrame)
+df.map(lambda x: round(x, 2))     # pandas 2.x
+
+# Series element mapping
+df['grade'].map({'A': 4.0, 'B': 3.0})`, tags: ["transform", "functional"] },
+      { name: ".str accessor", brief: "Vectorized string operations on Series", code: `df['name'].str.lower()
+df['name'].str.upper()
+df['text'].str.contains('pattern')
+df['col'].str.replace('old', 'new')
+df['col'].str.split(',').str[0]    # split + index
+df['col'].str.strip()
+df['col'].str.len()
+df['email'].str.extract(r'(\w+)@')`, tags: ["string", "transform"] },
+      { name: ".dt accessor", brief: "Vectorized datetime operations on Series", code: `df['date'] = pd.to_datetime(df['date'])
+df['date'].dt.year
+df['date'].dt.month
+df['date'].dt.day
+df['date'].dt.day_of_week     # 0=Monday
+df['date'].dt.floor('D')      # floor to day
+df['date'].dt.strftime('%Y-%m-%d')`, tags: ["datetime", "transform"] },
+    ]
+  },
+  {
+    id: "aggregation",
+    name: "Grouping & Aggregation",
+    color: "#34d399",
+    commands: [
+      { name: ".groupby()", brief: "Split-apply-combine — core of pandas aggregation", code: `df.groupby('col')['val'].mean()
+df.groupby('col')['val'].agg(['mean','std','count'])
+df.groupby(['col_a','col_b']).sum()
+
+# Multiple aggs per column
+df.groupby('group').agg(
+    mean_val=('value', 'mean'),
+    total=('value', 'sum'),
+    n=('value', 'count')
+)`, tags: ["groupby", "fundamental"] },
+      { name: ".pivot_table()", brief: "Excel-style pivot — group, aggregate, and reshape in one call", code: `pd.pivot_table(
+    df,
+    values='sales',
+    index='region',
+    columns='quarter',
+    aggfunc='sum',
+    fill_value=0,
+    margins=True       # adds row/col totals
+)`, tags: ["groupby", "reshape"] },
+      { name: ".resample()", brief: "Time-based groupby for datetime-indexed DataFrames", code: `df = df.set_index('date')
+df.resample('M').mean()      # monthly mean
+df.resample('W').sum()       # weekly sum
+df.resample('Q').agg({'col': ['mean','std']})`, tags: ["groupby", "datetime"] },
+      { name: ".transform()", brief: "Apply a group function but keep original DataFrame shape", code: `# Add group mean as a new column
+df['group_mean'] = df.groupby('group')['val'].transform('mean')
+
+# Z-score within group
+df['z'] = df.groupby('group')['val'].transform(
+    lambda x: (x - x.mean()) / x.std()
+)`, tags: ["groupby", "transform"] },
+    ]
+  },
+  {
+    id: "merging",
+    name: "Merging & Reshaping",
+    color: "#22d3ee",
+    commands: [
+      { name: "pd.merge()", brief: "SQL-style join of two DataFrames on key columns", code: `pd.merge(df1, df2, on='id')                 # inner join
+pd.merge(df1, df2, on='id', how='left')     # left join
+pd.merge(df1, df2, on='id', how='outer')    # full outer
+pd.merge(df1, df2,
+         left_on='id', right_on='user_id')  # diff col names
+pd.merge(df1, df2, on=['a','b'])            # multi-key`, tags: ["merge", "fundamental"] },
+      { name: "pd.concat()", brief: "Stack DataFrames vertically or horizontally", code: `pd.concat([df1, df2])                 # stack rows
+pd.concat([df1, df2], ignore_index=True)
+pd.concat([df1, df2], axis=1)         # side by side
+pd.concat([df1, df2], keys=['a','b']) # multi-index`, tags: ["merge"] },
+      { name: ".melt()", brief: "Wide to long format — unpivot columns into rows", code: `df.melt(
+    id_vars=['id', 'name'],      # keep these cols
+    value_vars=['q1','q2','q3'], # unpivot these
+    var_name='quarter',
+    value_name='sales'
+)`, tags: ["reshape"] },
+      { name: ".pivot() / .unstack()", brief: "Long to wide format — reshape rows into columns", code: `# pivot: unique index/column combos
+df.pivot(index='date', columns='variable', values='value')
+
+# unstack: move innermost index level to columns
+df.groupby(['region','product']).sum().unstack('product')`, tags: ["reshape"] },
+      { name: ".stack() / .explode()", brief: "Stack columns into rows; explode list-valued cells", code: `# stack: move column level to row index
+df.stack()
+
+# explode: one row per list element
+df['tags'] = df['tags'].str.split(',')
+df.explode('tags')`, tags: ["reshape"] },
+    ]
+  },
+  {
+    id: "stats",
+    name: "Statistics & Window Ops",
+    color: "#fb923c",
+    commands: [
+      { name: ".corr() / .cov()", brief: "Pairwise correlation and covariance matrices", code: `df.corr()                       # Pearson (default)
+df.corr(method='spearman')
+df.corr(method='kendall')
+df[['a','b']].cov()`, tags: ["stats"] },
+      { name: ".rolling() / .expanding()", brief: "Sliding window and expanding window calculations", code: `df['rolling_mean'] = df['val'].rolling(window=7).mean()
+df['rolling_std']  = df['val'].rolling(window=7).std()
+df['rolling_mean'] = df['val'].rolling(
+    window=7, min_periods=1).mean()  # handle edges
+
+df['cum_mean'] = df['val'].expanding().mean()`, tags: ["stats", "window"] },
+      { name: ".rank() / .pct_change() / .diff()", brief: "Rank values, percent change, and first differences", code: `df['rank'] = df['score'].rank(ascending=False)
+df['rank'] = df['score'].rank(method='dense')
+
+df['pct_change'] = df['price'].pct_change()     # % change
+df['diff']       = df['price'].diff()           # absolute diff
+df['diff_2']     = df['price'].diff(periods=2)  # lag-2`, tags: ["stats"] },
+      { name: "pd.cut() / pd.qcut()", brief: "Bin continuous values into discrete intervals", code: `# Fixed width bins
+df['age_group'] = pd.cut(df['age'],
+                         bins=[0,18,35,60,100],
+                         labels=['youth','adult','middle','senior'])
+
+# Quantile-based bins
+df['quartile'] = pd.qcut(df['score'], q=4,
+                          labels=['Q1','Q2','Q3','Q4'])`, tags: ["stats", "binning"] },
+    ]
+  },
+  {
+    id: "io",
+    name: "Output & Display",
+    color: "#94a3b8",
+    commands: [
+      { name: ".to_csv() / .to_excel() / .to_json()", brief: "Write a DataFrame to file", code: `df.to_csv('output.csv', index=False)
+df.to_csv('output.csv', columns=['a','b'], float_format='%.3f')
+df.to_excel('output.xlsx', sheet_name='Results', index=False)
+df.to_json('output.json', orient='records')`, tags: ["io"] },
+      { name: ".set_index() / .reset_index()", brief: "Promote a column to the index or flatten the index back to columns", code: `df.set_index('id')
+df.set_index(['region', 'date'])  # multi-index
+
+df.reset_index()               # index → column
+df.reset_index(drop=True)      # discard index`, tags: ["index"] },
+      { name: ".sort_values() / .sort_index()", brief: "Sort rows by column values or by index", code: `df.sort_values('col')
+df.sort_values('col', ascending=False)
+df.sort_values(['col_a','col_b'], ascending=[True, False])
+df.sort_index()
+df.sort_index(ascending=False)`, tags: ["sorting"] },
+      { name: "pd.options / .style", brief: "Configure display settings and styled output", code: `pd.options.display.max_columns = 50
+pd.options.display.max_rows = 100
+pd.options.display.float_format = '{:.3f}'.format
+
+# Styled output (Jupyter)
+df.style.highlight_max(axis=0)
+df.style.background_gradient(cmap='viridis')
+df.style.format({'price': '${:.2f}', 'pct': '{:.1%}'})`, tags: ["display"] },
+    ]
+  }
+];
+
+function highlight(code) {
+  return code
+    .replace(/\b(import|from|def|return|for|in|if|else|True|False|None|not|as)\b/g, '<span class="kw">$1</span>')
+    .replace(/\b(pd|pandas|df|df1|df2|s)\b/g, '<span class="fn">$1</span>')
+    .replace(/(#.+)/g, '<span class="cm">$1</span>')
+    .replace(/('[\w./_\-\s%$@{}\[\]:,]*'|"[\w./_\-\s%$@{}\[\]:,]*")/g, '<span class="st">$1</span>')
+    .replace(/\b(\d+(?:\.\d+)?(?:e-?\d+)?)\b/g, '<span class="nm">$1</span>');
+}
+
+function buildUI() {
+  const main = document.getElementById('main');
+  const filterBtns = document.getElementById('filter-btns');
+  let totalCmds = 0;
+
+  CATEGORIES.forEach(cat => {
+    totalCmds += cat.commands.length;
+
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn';
+    btn.dataset.filter = cat.id;
+    btn.textContent = cat.name;
+    filterBtns.appendChild(btn);
+
+    const section = document.createElement('div');
+    section.className = 'category';
+    section.dataset.catId = cat.id;
+
+    section.innerHTML = `
+      <div class="cat-header">
+        <div class="cat-dot" style="background:${cat.color}"></div>
+        <div class="cat-title" style="color:${cat.color}">${cat.name}</div>
+        <div class="cat-line"></div>
+        <div class="cat-count">${cat.commands.length} commands</div>
+      </div>
+      <div class="cards-grid"></div>
+    `;
+
+    const grid = section.querySelector('.cards-grid');
+
+    cat.commands.forEach(cmd => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.style.setProperty('--cat-color', cat.color);
+      card.dataset.name = cmd.name.toLowerCase();
+      card.dataset.tags = cmd.tags.join(' ');
+      card.dataset.catId = cat.id;
+
+      const tagHTML = cmd.tags.map(t =>
+        `<span class="tag" style="color:${cat.color};border-color:${cat.color}33">${t}</span>`
+      ).join('');
+
+      card.innerHTML = `
+        <div class="card-top">
+          <div class="card-name">${cmd.name}</div>
+          <div class="card-toggle">▼</div>
+        </div>
+        <div class="card-brief">${cmd.brief}</div>
+        <div class="card-detail">
+          <div>
+            <div class="detail-label">Usage</div>
+            <div class="code-block">${highlight(cmd.code)}</div>
+          </div>
+          <div class="tags">${tagHTML}</div>
+        </div>
+      `;
+
+      card.addEventListener('click', () => card.classList.toggle('open'));
+      grid.appendChild(card);
+    });
+
+    main.appendChild(section);
+  });
+
+  document.getElementById('total-count').textContent = totalCmds;
+  document.getElementById('cat-count').textContent = CATEGORIES.length;
+
+  filterBtns.addEventListener('click', e => {
+    if (!e.target.classList.contains('filter-btn')) return;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    const filter = e.target.dataset.filter;
+    document.querySelectorAll('.category').forEach(sec => {
+      sec.classList.toggle('hidden', filter !== 'all' && sec.dataset.catId !== filter);
+    });
+  });
+
+  document.getElementById('search').addEventListener('input', e => {
+    const q = e.target.value.toLowerCase().trim();
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.filter-btn[data-filter="all"]').classList.add('active');
+    document.querySelectorAll('.category').forEach(s => s.classList.remove('hidden'));
+
+    if (!q) {
+      document.querySelectorAll('.card').forEach(c => c.classList.remove('hidden'));
+      return;
+    }
+
+    document.querySelectorAll('.card').forEach(card => {
+      const match = card.dataset.name.includes(q) ||
+                    card.dataset.tags.includes(q) ||
+                    card.querySelector('.card-brief').textContent.toLowerCase().includes(q);
+      card.classList.toggle('hidden', !match);
+    });
+
+    document.querySelectorAll('.category').forEach(sec => {
+      const visible = [...sec.querySelectorAll('.card')].some(c => !c.classList.contains('hidden'));
+      sec.classList.toggle('hidden', !visible);
+    });
+  });
+}
+
+buildUI();
+</script>
+</body>
+</html>
