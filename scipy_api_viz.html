@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SciPy API Reference</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #0a0c10; --surface: #111318; --surface2: #181c24; --border: #1e2330; --accent: #e879f9; --accent2: #818cf8; --text: #e2e8f0; --muted: #64748b; --code: #94a3b8; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; z-index: 0; }
+  body::after { content: ''; position: fixed; bottom: -100px; left: -100px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(232,121,249,0.05) 0%, transparent 70%); pointer-events: none; z-index: 0; }
+  .back-nav { position: relative; z-index: 1; padding: 16px 40px; border-bottom: 1px solid var(--border); }
+  .back-nav a { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--muted); text-decoration: none; letter-spacing: 1px; text-transform: uppercase; transition: color 0.2s; }
+  .back-nav a:hover { color: var(--accent); }
+  header { position: relative; z-index: 1; padding: 48px 40px 32px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+  .logo-area h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 800; letter-spacing: -2px; line-height: 1; background: linear-gradient(135deg, #e879f9 0%, #818cf8 55%, #38bdf8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .logo-area .subtitle { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--muted); letter-spacing: 3px; text-transform: uppercase; margin-top: 6px; }
+  .stats { display: flex; gap: 24px; }
+  .stat { text-align: right; }
+  .stat-num { font-size: 1.8rem; font-weight: 800; color: var(--accent); line-height: 1; }
+  .stat-label { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; }
+  .search-bar { position: relative; z-index: 1; padding: 20px 40px; border-bottom: 1px solid var(--border); display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .search-input { flex: 1; min-width: 200px; background: var(--surface); border: 1px solid var(--border); color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; padding: 10px 16px; outline: none; transition: border-color 0.2s; }
+  .search-input::placeholder { color: var(--muted); }
+  .search-input:focus { border-color: var(--accent); }
+  .filter-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .filter-btn { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; padding: 8px 14px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; letter-spacing: 1px; text-transform: uppercase; transition: all 0.15s; }
+  .filter-btn:hover, .filter-btn.active { background: var(--surface2); color: var(--text); border-color: var(--muted); }
+  .filter-btn.active { border-color: var(--accent); color: var(--accent); }
+  main { position: relative; z-index: 1; padding: 32px 40px; display: flex; flex-direction: column; gap: 40px; }
+  .category { display: flex; flex-direction: column; gap: 16px; }
+  .cat-header { display: flex; align-items: center; gap: 16px; }
+  .cat-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .cat-title { font-size: 0.7rem; font-family: 'JetBrains Mono', monospace; letter-spacing: 3px; text-transform: uppercase; font-weight: 700; }
+  .cat-line { flex: 1; height: 1px; background: var(--border); }
+  .cat-count { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--muted); }
+  .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+  .card { background: var(--surface); border: 1px solid var(--border); cursor: pointer; transition: all 0.2s; overflow: hidden; position: relative; }
+  .card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--cat-color); transform: scaleY(0); transition: transform 0.2s; transform-origin: bottom; }
+  .card:hover::before, .card.open::before { transform: scaleY(1); }
+  .card:hover { border-color: var(--cat-color); background: var(--surface2); transform: translateY(-1px); }
+  .card.open { border-color: var(--cat-color); }
+  .card-top { padding: 14px 16px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .card-name { font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; font-weight: 500; color: var(--cat-color); word-break: break-all; line-height: 1.4; }
+  .card-toggle { font-size: 0.65rem; color: var(--muted); flex-shrink: 0; transition: transform 0.2s; margin-top: 2px; }
+  .card.open .card-toggle { transform: rotate(180deg); }
+  .card-brief { font-size: 0.75rem; color: var(--muted); padding: 0 16px 12px; line-height: 1.5; }
+  .card-detail { display: none; border-top: 1px solid var(--border); padding: 14px 16px; flex-direction: column; gap: 10px; }
+  .card.open .card-detail { display: flex; }
+  .detail-label { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 4px; }
+  .code-block { background: var(--bg); border: 1px solid var(--border); padding: 10px 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--code); line-height: 1.7; overflow-x: auto; white-space: pre; }
+  .code-block .kw { color: #c792ea; } .code-block .fn { color: #82aaff; } .code-block .st { color: #c3e88d; } .code-block .nm { color: #f78c6c; } .code-block .cm { color: #546e7a; }
+  .tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; padding: 3px 8px; border: 1px solid; text-transform: uppercase; letter-spacing: 1px; }
+  .hidden { display: none !important; }
+  footer { position: relative; z-index: 1; padding: 24px 40px; border-top: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--muted); letter-spacing: 1px; display: flex; gap: 16px; justify-content: space-between; flex-wrap: wrap; }
+  @media (max-width: 600px) { .back-nav, header, .search-bar, main, footer { padding-left: 20px; padding-right: 20px; } .cards-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="back-nav"><a href="index.html">← Back to index</a></div>
+<header>
+  <div class="logo-area">
+    <h1>SciPy API</h1>
+    <div class="subtitle">Scientific Computing Command Reference</div>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="stat-num" id="total-count">0</div><div class="stat-label">Commands</div></div>
+    <div class="stat"><div class="stat-num" id="cat-count">0</div><div class="stat-label">Categories</div></div>
+  </div>
+</header>
+<div class="search-bar">
+  <input class="search-input" type="text" placeholder="Search commands... (e.g. fft, gaussian, ttest)" id="search" />
+  <div class="filter-btns" id="filter-btns"><button class="filter-btn active" data-filter="all">All</button></div>
+</div>
+<main id="main"></main>
+<footer>
+  <span>Click any card to expand with usage examples</span>
+  <span>SciPy 1.x · Frank Lato</span>
+</footer>
+<script>
+const CATEGORIES = [
+  {
+    id: "signal",
+    name: "Signal Processing",
+    color: "#e879f9",
+    commands: [
+      { name: "scipy.signal.butter() / filtfilt()", brief: "Design and apply Butterworth IIR filters — low/high/bandpass", code: `from scipy import signal
+
+# Design filter
+b, a = signal.butter(N=4, Wn=0.1, btype='low')
+# Wn normalized: 0-1 (1 = Nyquist)
+
+# Zero-phase filtering (no phase distortion)
+filtered = signal.filtfilt(b, a, data)
+
+# Bandpass
+b, a = signal.butter(4, [0.05, 0.3], btype='band')
+filtered = signal.filtfilt(b, a, data)`, tags: ["signal", "filter", "fundamental"] },
+      { name: "scipy.signal.find_peaks()", brief: "Detect peaks in a 1D signal with optional constraints", code: `from scipy.signal import find_peaks
+
+peaks, props = find_peaks(signal_1d,
+                           height=0.5,
+                           distance=10,    # min samples apart
+                           prominence=0.1,
+                           width=2)
+# peaks: indices of peaks
+# props: dict of heights, prominences, widths`, tags: ["signal", "peaks"] },
+      { name: "scipy.signal.convolve() / convolve2d()", brief: "1D and 2D convolution with boundary control", code: `from scipy.signal import convolve, convolve2d
+
+out = convolve(signal_1d, kernel, mode='same')
+# mode: 'full', 'same', 'valid'
+
+# 2D image convolution
+out = convolve2d(img, kernel, mode='same',
+                 boundary='symm')`, tags: ["signal", "convolution"] },
+      { name: "scipy.signal.spectrogram()", brief: "Short-time Fourier transform — time-frequency representation", code: `from scipy.signal import spectrogram
+
+f, t, Sxx = spectrogram(x, fs=1000,
+                         nperseg=256,
+                         noverlap=128)
+# Plot
+plt.pcolormesh(t, f, 10*np.log10(Sxx),
+               cmap='viridis')`, tags: ["signal", "fft"] },
+    ]
+  },
+  {
+    id: "stats",
+    name: "Statistics",
+    color: "#818cf8",
+    commands: [
+      { name: "scipy.stats distributions", brief: "Probability distributions with pdf, cdf, ppf, rvs methods", code: `from scipy import stats
+
+# Normal distribution
+norm = stats.norm(loc=0, scale=1)
+norm.pdf(x)         # probability density
+norm.cdf(x)         # cumulative prob
+norm.ppf(0.95)      # quantile (inverse CDF)
+norm.rvs(size=1000) # random samples
+
+# Others: stats.t, stats.chi2, stats.binom, stats.poisson`, tags: ["stats", "distributions"] },
+      { name: "scipy.stats.ttest / mannwhitneyu", brief: "Hypothesis tests for comparing group means", code: `from scipy.stats import ttest_ind, ttest_rel, mannwhitneyu
+
+# Independent samples t-test
+stat, p = ttest_ind(group1, group2, equal_var=False)
+
+# Paired t-test
+stat, p = ttest_rel(before, after)
+
+# Non-parametric: Mann-Whitney U
+stat, p = mannwhitneyu(group1, group2,
+                        alternative='two-sided')`, tags: ["stats", "hypothesis"] },
+      { name: "scipy.stats.pearsonr / spearmanr", brief: "Correlation coefficients and p-values", code: `from scipy.stats import pearsonr, spearmanr
+
+r, p = pearsonr(x, y)      # linear correlation
+r, p = spearmanr(x, y)     # rank correlation
+
+# Multiple columns
+corr_matrix, p_matrix = spearmanr(data_matrix)`, tags: ["stats", "correlation"] },
+      { name: "scipy.stats.chi2_contingency", brief: "Chi-squared test for independence of categorical variables", code: `from scipy.stats import chi2_contingency
+
+# Contingency table
+observed = np.array([[10, 20], [30, 40]])
+chi2, p, dof, expected = chi2_contingency(observed)
+print(f'chi2={chi2:.3f}, p={p:.4f}')`, tags: ["stats", "hypothesis"] },
+      { name: "scipy.stats.normaltest / shapiro", brief: "Test whether a sample comes from a normal distribution", code: `from scipy.stats import normaltest, shapiro
+
+# D'Agostino-Pearson (n > 20)
+stat, p = normaltest(data)
+
+# Shapiro-Wilk (better for small n)
+stat, p = shapiro(data)
+
+if p > 0.05:
+    print('Likely normal')`, tags: ["stats", "normality"] },
+    ]
+  },
+  {
+    id: "ndimage",
+    name: "N-D Image Processing",
+    color: "#38bdf8",
+    commands: [
+      { name: "scipy.ndimage.gaussian_filter()", brief: "N-dimensional Gaussian smoothing — works on 2D images and 3D volumes", code: `from scipy import ndimage
+
+smoothed = ndimage.gaussian_filter(img, sigma=2.0)
+# 3D volume
+smoothed_3d = ndimage.gaussian_filter(volume, sigma=[1,2,2])
+
+# Anisotropic
+smoothed = ndimage.gaussian_filter(img, sigma=(1, 3))`, tags: ["image", "filter"] },
+      { name: "scipy.ndimage.label()", brief: "Connected component labeling — identify distinct objects in binary images", code: `from scipy import ndimage
+
+labeled, n_objects = ndimage.label(binary_mask)
+print(f'{n_objects} objects found')
+
+# Object properties
+sizes = ndimage.sum(binary_mask, labeled,
+                    range(1, n_objects+1))
+centroids = ndimage.center_of_mass(
+    binary_mask, labeled, range(1, n_objects+1))`, tags: ["image", "segmentation"] },
+      { name: "scipy.ndimage filters", brief: "Morphological and rank filters for N-D arrays", code: `ndimage.median_filter(img, size=3)
+ndimage.uniform_filter(img, size=5)
+ndimage.maximum_filter(img, size=3)   # dilation
+ndimage.minimum_filter(img, size=3)   # erosion
+ndimage.sobel(img, axis=0)            # gradient`, tags: ["image", "filter"] },
+    ]
+  },
+  {
+    id: "optimize",
+    name: "Optimization",
+    color: "#34d399",
+    commands: [
+      { name: "scipy.optimize.minimize()", brief: "General-purpose scalar function minimization", code: `from scipy.optimize import minimize
+
+def loss(params):
+    a, b = params
+    return (a - 3)**2 + (b + 1)**2
+
+result = minimize(loss, x0=[0, 0], method='L-BFGS-B')
+print(result.x)       # optimal params
+print(result.fun)     # minimum value`, tags: ["optimize"] },
+      { name: "scipy.optimize.curve_fit()", brief: "Fit a parametric function to data via nonlinear least squares", code: `from scipy.optimize import curve_fit
+
+def gaussian(x, amp, mu, sigma):
+    return amp * np.exp(-(x-mu)**2 / (2*sigma**2))
+
+popt, pcov = curve_fit(gaussian, x_data, y_data,
+                        p0=[1.0, 0.0, 1.0])
+perr = np.sqrt(np.diag(pcov))  # std errors
+amp, mu, sigma = popt`, tags: ["optimize", "fitting"] },
+      { name: "scipy.optimize.linear_sum_assignment()", brief: "Hungarian algorithm — optimal assignment matching (used in cell tracking)", code: `from scipy.optimize import linear_sum_assignment
+
+# Cost matrix: shape (n_workers, n_tasks)
+cost = np.array([[4,1,3],[2,0,5],[3,2,2]])
+row_ind, col_ind = linear_sum_assignment(cost)
+total_cost = cost[row_ind, col_ind].sum()`, tags: ["optimize", "assignment"] },
+    ]
+  },
+  {
+    id: "spatial",
+    name: "Spatial & Distance",
+    color: "#fb923c",
+    commands: [
+      { name: "scipy.spatial.distance", brief: "Pairwise distances between sets of observations", code: `from scipy.spatial.distance import cdist, pdist, squareform
+
+# Between two sets
+D = cdist(X, Y, metric='euclidean')   # (n,m) matrix
+D = cdist(X, Y, metric='cosine')
+
+# Within one set
+D_flat = pdist(X, metric='euclidean') # condensed
+D_sq   = squareform(D_flat)           # (n,n) matrix`, tags: ["spatial", "distance"] },
+      { name: "scipy.spatial.KDTree", brief: "Fast nearest-neighbor lookup in k-dimensional space", code: `from scipy.spatial import KDTree
+
+tree = KDTree(points)
+dist, idx = tree.query(query_pt, k=1)    # nearest
+dist, idx = tree.query(query_pt, k=5)    # 5 nearest
+
+# All points within radius r
+idx = tree.query_ball_point(query_pt, r=2.0)`, tags: ["spatial", "nearest"] },
+      { name: "scipy.spatial.ConvexHull / Delaunay", brief: "Convex hull and Delaunay triangulation of point sets", code: `from scipy.spatial import ConvexHull, Delaunay
+
+hull = ConvexHull(points)
+hull.volume   # enclosed volume
+hull.area     # surface area
+
+tri = Delaunay(points)
+# Check if point is inside hull
+in_hull = tri.find_simplex(test_pts) >= 0`, tags: ["spatial", "geometry"] },
+    ]
+  }
+];
+
+function highlight(code) {
+  return code
+    .replace(/\b(import|from|as|def|return|for|in|if|else|True|False|None|not|print)\b/g, '<span class="kw">$1</span>')
+    .replace(/\b(signal|stats|ndimage|optimize|norm|result|tree|hull|tri|b|a|f|t)\b/g, '<span class="fn">$1</span>')
+    .replace(/(#.+)/g, '<span class="cm">$1</span>')
+    .replace(/('[\w./_\-\s]*'|"[\w./_\-\s]*")/g, '<span class="st">$1</span>')
+    .replace(/\b(\d+(?:\.\d+)?(?:e-?\d+)?)\b/g, '<span class="nm">$1</span>');
+}
+
+function buildUI() {
+  const main = document.getElementById('main');
+  const filterBtns = document.getElementById('filter-btns');
+  let totalCmds = 0;
+  CATEGORIES.forEach(cat => {
+    totalCmds += cat.commands.length;
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn'; btn.dataset.filter = cat.id; btn.textContent = cat.name;
+    filterBtns.appendChild(btn);
+    const section = document.createElement('div');
+    section.className = 'category'; section.dataset.catId = cat.id;
+    section.innerHTML = `<div class="cat-header"><div class="cat-dot" style="background:${cat.color}"></div><div class="cat-title" style="color:${cat.color}">${cat.name}</div><div class="cat-line"></div><div class="cat-count">${cat.commands.length} commands</div></div><div class="cards-grid"></div>`;
+    const grid = section.querySelector('.cards-grid');
+    cat.commands.forEach(cmd => {
+      const card = document.createElement('div');
+      card.className = 'card'; card.style.setProperty('--cat-color', cat.color);
+      card.dataset.name = cmd.name.toLowerCase(); card.dataset.tags = cmd.tags.join(' '); card.dataset.catId = cat.id;
+      const tagHTML = cmd.tags.map(t => `<span class="tag" style="color:${cat.color};border-color:${cat.color}33">${t}</span>`).join('');
+      card.innerHTML = `<div class="card-top"><div class="card-name">${cmd.name}</div><div class="card-toggle">▼</div></div><div class="card-brief">${cmd.brief}</div><div class="card-detail"><div><div class="detail-label">Usage</div><div class="code-block">${highlight(cmd.code)}</div></div><div class="tags">${tagHTML}</div></div>`;
+      card.addEventListener('click', () => card.classList.toggle('open'));
+      grid.appendChild(card);
+    });
+    main.appendChild(section);
+  });
+  document.getElementById('total-count').textContent = totalCmds;
+  document.getElementById('cat-count').textContent = CATEGORIES.length;
+  filterBtns.addEventListener('click', e => {
+    if (!e.target.classList.contains('filter-btn')) return;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    const filter = e.target.dataset.filter;
+    document.querySelectorAll('.category').forEach(sec => sec.classList.toggle('hidden', filter !== 'all' && sec.dataset.catId !== filter));
+  });
+  document.getElementById('search').addEventListener('input', e => {
+    const q = e.target.value.toLowerCase().trim();
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.filter-btn[data-filter="all"]').classList.add('active');
+    document.querySelectorAll('.category').forEach(s => s.classList.remove('hidden'));
+    if (!q) { document.querySelectorAll('.card').forEach(c => c.classList.remove('hidden')); return; }
+    document.querySelectorAll('.card').forEach(card => {
+      card.classList.toggle('hidden', !(card.dataset.name.includes(q) || card.dataset.tags.includes(q) || card.querySelector('.card-brief').textContent.toLowerCase().includes(q)));
+    });
+    document.querySelectorAll('.category').forEach(sec => {
+      sec.classList.toggle('hidden', ![...sec.querySelectorAll('.card')].some(c => !c.classList.contains('hidden')));
+    });
+  });
+}
+buildUI();
+</script>
+</body>
+</html>

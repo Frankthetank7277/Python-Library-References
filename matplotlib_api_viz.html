@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Matplotlib API Reference</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --surface2: #181c24;
+    --border: #1e2330;
+    --accent: #38bdf8;
+    --accent2: #818cf8;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --code: #94a3b8;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; overflow-x: hidden; }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background-image: linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 40px 40px; pointer-events: none; z-index: 0;
+  }
+  body::after {
+    content: ''; position: fixed; top: -100px; right: -100px; width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(56,189,248,0.05) 0%, transparent 70%); pointer-events: none; z-index: 0;
+  }
+  .back-nav { position: relative; z-index: 1; padding: 16px 40px; border-bottom: 1px solid var(--border); }
+  .back-nav a { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--muted); text-decoration: none; letter-spacing: 1px; text-transform: uppercase; transition: color 0.2s; }
+  .back-nav a:hover { color: var(--accent); }
+  header { position: relative; z-index: 1; padding: 48px 40px 32px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+  .logo-area h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 800; letter-spacing: -2px; line-height: 1; background: linear-gradient(135deg, #38bdf8 0%, #818cf8 55%, #c084fc 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .logo-area .subtitle { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--muted); letter-spacing: 3px; text-transform: uppercase; margin-top: 6px; }
+  .stats { display: flex; gap: 24px; flex-wrap: wrap; }
+  .stat { text-align: right; }
+  .stat-num { font-size: 1.8rem; font-weight: 800; color: var(--accent); line-height: 1; }
+  .stat-label { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; }
+  .search-bar { position: relative; z-index: 1; padding: 20px 40px; border-bottom: 1px solid var(--border); display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .search-input { flex: 1; min-width: 200px; background: var(--surface); border: 1px solid var(--border); color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; padding: 10px 16px; outline: none; transition: border-color 0.2s; }
+  .search-input::placeholder { color: var(--muted); }
+  .search-input:focus { border-color: var(--accent); }
+  .filter-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .filter-btn { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; padding: 8px 14px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; letter-spacing: 1px; text-transform: uppercase; transition: all 0.15s; }
+  .filter-btn:hover, .filter-btn.active { background: var(--surface2); color: var(--text); border-color: var(--muted); }
+  .filter-btn.active { border-color: var(--accent); color: var(--accent); }
+  main { position: relative; z-index: 1; padding: 32px 40px; display: flex; flex-direction: column; gap: 40px; }
+  .category { display: flex; flex-direction: column; gap: 16px; }
+  .cat-header { display: flex; align-items: center; gap: 16px; }
+  .cat-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .cat-title { font-size: 0.7rem; font-family: 'JetBrains Mono', monospace; letter-spacing: 3px; text-transform: uppercase; font-weight: 700; }
+  .cat-line { flex: 1; height: 1px; background: var(--border); }
+  .cat-count { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--muted); }
+  .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+  .card { background: var(--surface); border: 1px solid var(--border); cursor: pointer; transition: all 0.2s; overflow: hidden; position: relative; }
+  .card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--cat-color); transform: scaleY(0); transition: transform 0.2s; transform-origin: bottom; }
+  .card:hover::before, .card.open::before { transform: scaleY(1); }
+  .card:hover { border-color: var(--cat-color); background: var(--surface2); transform: translateY(-1px); }
+  .card.open { border-color: var(--cat-color); }
+  .card-top { padding: 14px 16px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .card-name { font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; font-weight: 500; color: var(--cat-color); word-break: break-all; line-height: 1.4; }
+  .card-toggle { font-size: 0.65rem; color: var(--muted); flex-shrink: 0; transition: transform 0.2s; margin-top: 2px; }
+  .card.open .card-toggle { transform: rotate(180deg); }
+  .card-brief { font-size: 0.75rem; color: var(--muted); padding: 0 16px 12px; line-height: 1.5; }
+  .card-detail { display: none; border-top: 1px solid var(--border); padding: 14px 16px; flex-direction: column; gap: 10px; }
+  .card.open .card-detail { display: flex; }
+  .detail-label { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 4px; }
+  .code-block { background: var(--bg); border: 1px solid var(--border); padding: 10px 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--code); line-height: 1.7; overflow-x: auto; white-space: pre; }
+  .code-block .kw { color: #c792ea; }
+  .code-block .fn { color: #82aaff; }
+  .code-block .st { color: #c3e88d; }
+  .code-block .nm { color: #f78c6c; }
+  .code-block .cm { color: #546e7a; }
+  .tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; padding: 3px 8px; border: 1px solid; text-transform: uppercase; letter-spacing: 1px; }
+  .hidden { display: none !important; }
+  footer { position: relative; z-index: 1; padding: 24px 40px; border-top: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--muted); letter-spacing: 1px; display: flex; gap: 16px; justify-content: space-between; flex-wrap: wrap; }
+  @media (max-width: 600px) { .back-nav, header, .search-bar, main, footer { padding-left: 20px; padding-right: 20px; } .cards-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="back-nav"><a href="index.html">← Back to index</a></div>
+<header>
+  <div class="logo-area">
+    <h1>Matplotlib API</h1>
+    <div class="subtitle">Plotting & Visualization Command Reference</div>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="stat-num" id="total-count">0</div><div class="stat-label">Commands</div></div>
+    <div class="stat"><div class="stat-num" id="cat-count">0</div><div class="stat-label">Categories</div></div>
+  </div>
+</header>
+<div class="search-bar">
+  <input class="search-input" type="text" placeholder="Search commands... (e.g. subplot, imshow, colorbar)" id="search" />
+  <div class="filter-btns" id="filter-btns"><button class="filter-btn active" data-filter="all">All</button></div>
+</div>
+<main id="main"></main>
+<footer>
+  <span>Click any card to expand with usage examples</span>
+  <span>Matplotlib 3.x · Frank Lato</span>
+</footer>
+<script>
+const CATEGORIES = [
+  {
+    id: "figures",
+    name: "Figures & Axes",
+    color: "#38bdf8",
+    commands: [
+      { name: "plt.subplots()", brief: "Create a figure with one or more axes — the standard entry point", code: `import matplotlib.pyplot as plt
+
+fig, ax = plt.subplots()                    # single axes
+fig, axes = plt.subplots(2, 3)              # 2x3 grid
+fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+fig, axes = plt.subplots(2, 2, sharex=True, sharey=True)
+
+# Access axes in grid
+ax = axes[0, 1]    # row 0, col 1
+ax = axes.flat[3]  # flat index`, tags: ["figure", "fundamental"] },
+      { name: "plt.figure()", brief: "Create a bare figure without axes for manual layout", code: `fig = plt.figure(figsize=(8, 6))
+fig = plt.figure(figsize=(8, 6), dpi=150)
+
+# Add axes manually
+ax = fig.add_subplot(1, 2, 1)
+ax = fig.add_axes([left, bottom, width, height])  # [0-1]`, tags: ["figure"] },
+      { name: "plt.tight_layout() / constrained_layout", brief: "Automatically adjust subplot spacing to prevent overlap", code: `plt.tight_layout()
+plt.tight_layout(pad=2.0)
+plt.tight_layout(h_pad=1.5, w_pad=1.5)
+
+# Preferred modern approach — set at creation
+fig, axes = plt.subplots(2, 2, layout='constrained')`, tags: ["figure", "layout"] },
+      { name: "plt.show() / plt.savefig()", brief: "Display or save the current figure", code: `plt.show()
+
+plt.savefig('plot.png', dpi=150, bbox_inches='tight')
+plt.savefig('plot.svg')
+plt.savefig('plot.pdf')
+plt.close()      # free memory after saving
+plt.close('all') # close all figures`, tags: ["figure", "io"] },
+      { name: "GridSpec / subplot_mosaic", brief: "Complex multi-panel layouts with unequal subplot sizes", code: `import matplotlib.gridspec as gridspec
+gs = gridspec.GridSpec(2, 3, figure=fig)
+ax1 = fig.add_subplot(gs[0, :])    # spans full row
+ax2 = fig.add_subplot(gs[1, 0:2])
+ax3 = fig.add_subplot(gs[1, 2])
+
+# Mosaic layout (clearest API)
+fig, axs = plt.subplot_mosaic('AAB;CCB', figsize=(8,5))
+axs['A'].plot(...)`, tags: ["figure", "layout"] },
+    ]
+  },
+  {
+    id: "basic_plots",
+    name: "Basic Plot Types",
+    color: "#818cf8",
+    commands: [
+      { name: "ax.plot()", brief: "Line and scatter plots — the most fundamental plot type", code: `ax.plot(x, y)
+ax.plot(x, y, 'r--')                    # red dashed
+ax.plot(x, y, color='steelblue', linewidth=2,
+        linestyle='--', marker='o', markersize=4,
+        label='series 1')
+ax.plot(x, y1, x, y2)                  # multiple lines`, tags: ["plot", "fundamental"] },
+      { name: "ax.scatter()", brief: "Scatter plot with optional color/size mapping", code: `ax.scatter(x, y)
+ax.scatter(x, y, c=values, cmap='viridis',
+           s=sizes, alpha=0.7,
+           edgecolors='none')
+# Add colorbar
+sc = ax.scatter(x, y, c=z, cmap='plasma')
+fig.colorbar(sc, ax=ax)`, tags: ["plot"] },
+      { name: "ax.bar() / ax.barh()", brief: "Vertical and horizontal bar charts", code: `ax.bar(categories, values)
+ax.bar(x, heights, width=0.4, color='steelblue',
+       edgecolor='white', linewidth=0.5)
+
+# Grouped bars
+ax.bar(x - 0.2, vals1, width=0.4, label='A')
+ax.bar(x + 0.2, vals2, width=0.4, label='B')
+
+ax.barh(categories, values)  # horizontal`, tags: ["plot"] },
+      { name: "ax.hist()", brief: "Histogram of a distribution", code: `ax.hist(data, bins=30)
+ax.hist(data, bins='auto', density=True,
+        color='steelblue', alpha=0.7,
+        edgecolor='white')
+# Multiple overlapping
+ax.hist(data1, bins=30, alpha=0.5, label='A')
+ax.hist(data2, bins=30, alpha=0.5, label='B')`, tags: ["plot", "stats"] },
+      { name: "ax.boxplot() / ax.violinplot()", brief: "Distribution summaries across groups", code: `ax.boxplot([group1, group2, group3])
+ax.boxplot(data, vert=True, patch_artist=True,
+           medianprops=dict(color='red'))
+
+ax.violinplot([g1, g2, g3], showmedians=True)`, tags: ["plot", "stats"] },
+      { name: "ax.fill_between()", brief: "Shade a region between two curves — useful for confidence intervals", code: `ax.fill_between(x, y_lower, y_upper,
+                alpha=0.3, color='steelblue',
+                label='95% CI')
+ax.plot(x, y_mean, color='steelblue')
+
+# Conditional fill
+ax.fill_between(x, y1, y2,
+                where=(y1 > y2), color='green', alpha=0.3)`, tags: ["plot"] },
+    ]
+  },
+  {
+    id: "image_plots",
+    name: "Image & Matrix Plots",
+    color: "#c084fc",
+    commands: [
+      { name: "ax.imshow()", brief: "Display a 2D array or image — essential for biomedical imaging", code: `ax.imshow(img)                          # RGB (H,W,3)
+ax.imshow(img_gray, cmap='gray')        # grayscale
+ax.imshow(arr, cmap='viridis',
+          vmin=0, vmax=1,
+          interpolation='nearest')
+ax.imshow(img, aspect='auto')           # don't force square
+ax.axis('off')                          # hide ticks/frame`, tags: ["image", "fundamental"] },
+      { name: "ax.matshow() / ax.pcolormesh()", brief: "Visualize matrices and 2D grids", code: `ax.matshow(confusion_matrix, cmap='Blues')
+
+# pcolormesh: faster for large grids
+ax.pcolormesh(X, Y, Z, cmap='RdBu',
+              shading='auto', vmin=-1, vmax=1)`, tags: ["image", "matrix"] },
+      { name: "plt.colorbar()", brief: "Add a colorbar legend to a mappable plot", code: `im = ax.imshow(arr, cmap='viridis')
+fig.colorbar(im, ax=ax)
+fig.colorbar(im, ax=ax, label='Intensity',
+             shrink=0.8, pad=0.02)
+
+# Horizontal colorbar
+fig.colorbar(im, ax=ax, orientation='horizontal')`, tags: ["image", "legend"] },
+      { name: "ax.contour() / ax.contourf()", brief: "Contour lines and filled contours over 2D data", code: `ax.contour(X, Y, Z, levels=10)
+ax.contourf(X, Y, Z, levels=20, cmap='RdYlBu_r')
+
+# Overlay contour lines on filled
+cf = ax.contourf(X, Y, Z, cmap='viridis')
+ax.contour(X, Y, Z, colors='white', linewidths=0.5)
+fig.colorbar(cf)`, tags: ["image"] },
+    ]
+  },
+  {
+    id: "labels",
+    name: "Labels & Annotations",
+    color: "#fb923c",
+    commands: [
+      { name: "ax.set_title/xlabel/ylabel()", brief: "Set axis title and axis labels", code: `ax.set_title('My Plot', fontsize=14, fontweight='bold')
+ax.set_xlabel('X Axis Label', fontsize=12)
+ax.set_ylabel('Y Axis Label', fontsize=12)
+
+# Figure-level title
+fig.suptitle('Overall Figure Title', fontsize=16, y=1.02)`, tags: ["labels", "fundamental"] },
+      { name: "ax.legend()", brief: "Add and customize the plot legend", code: `ax.legend()
+ax.legend(loc='upper right')
+ax.legend(loc='best', fontsize=10,
+          framealpha=0.5, edgecolor='gray')
+ax.legend(handles=[p1, p2], labels=['A', 'B'])
+
+# Outside the axes
+ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')`, tags: ["labels"] },
+      { name: "ax.annotate()", brief: "Add text annotations with optional arrows", code: `ax.annotate('peak', xy=(x_peak, y_peak),
+            xytext=(x_peak+1, y_peak+0.5),
+            arrowprops=dict(arrowstyle='->',
+                            color='red'),
+            fontsize=10, color='red')
+
+ax.text(0.5, 0.5, 'text', transform=ax.transAxes,
+        ha='center', va='center')`, tags: ["labels", "annotation"] },
+      { name: "ax.set_xlim / ylim / xscale / yscale", brief: "Control axis ranges and scale", code: `ax.set_xlim(0, 10)
+ax.set_ylim(-1, 1)
+ax.set_xlim(left=0)              # only set one bound
+
+ax.set_xscale('log')
+ax.set_yscale('log')
+ax.set_yscale('symlog', linthresh=0.01)`, tags: ["axes"] },
+      { name: "ax.set_xticks / xticklabels", brief: "Customize tick positions and labels", code: `ax.set_xticks([0, 1, 2, 3])
+ax.set_xticklabels(['A', 'B', 'C', 'D'])
+ax.set_xticklabels(labels, rotation=45, ha='right')
+ax.tick_params(axis='both', labelsize=10)
+ax.tick_params(axis='x', rotation=30)`, tags: ["axes", "ticks"] },
+    ]
+  },
+  {
+    id: "styling",
+    name: "Styling & Themes",
+    color: "#34d399",
+    commands: [
+      { name: "plt.style.use()", brief: "Apply a global style preset to all subsequent plots", code: `plt.style.use('seaborn-v0_8-whitegrid')
+plt.style.use('ggplot')
+plt.style.use('dark_background')
+plt.style.use('bmh')
+
+print(plt.style.available)  # list all styles
+
+# Temporary style
+with plt.style.context('seaborn-v0_8-paper'):
+    fig, ax = plt.subplots()`, tags: ["style"] },
+      { name: "rcParams / rc()", brief: "Set default plot properties globally", code: `plt.rcParams['figure.figsize'] = (8, 5)
+plt.rcParams['font.size'] = 12
+plt.rcParams['axes.spines.top'] = False
+plt.rcParams['axes.spines.right'] = False
+plt.rcParams['figure.dpi'] = 150
+
+# Reset to defaults
+plt.rcdefaults()`, tags: ["style"] },
+      { name: "Colormaps", brief: "Reference for choosing and applying colormaps", code: `# Sequential
+cmap = 'viridis'    # perceptually uniform, default
+cmap = 'plasma'     # warm
+cmap = 'gray'       # grayscale images
+
+# Diverging (has meaningful center)
+cmap = 'RdBu_r'     # red-blue
+cmap = 'coolwarm'
+
+# Qualitative (categorical)
+cmap = 'tab10'      # 10 distinct colors
+
+# Reverse any map
+cmap = 'viridis_r'
+
+import matplotlib.cm as cm
+colors = cm.viridis(np.linspace(0, 1, n))`, tags: ["style", "color"] },
+      { name: "ax.spines / ax.grid()", brief: "Control plot border lines and background grid", code: `# Remove top/right borders (clean look)
+ax.spines['top'].set_visible(False)
+ax.spines['right'].set_visible(False)
+
+ax.grid(True)
+ax.grid(True, alpha=0.3, linestyle='--')
+ax.grid(axis='y', alpha=0.3)   # horizontal only`, tags: ["style"] },
+    ]
+  },
+  {
+    id: "advanced",
+    name: "Advanced & Utilities",
+    color: "#f472b6",
+    commands: [
+      { name: "plt.subplots_adjust()", brief: "Manually control subplot spacing and margins", code: `plt.subplots_adjust(
+    left=0.1, right=0.9,
+    top=0.9, bottom=0.1,
+    hspace=0.4,   # vertical spacing
+    wspace=0.3    # horizontal spacing
+)`, tags: ["layout"] },
+      { name: "ax.twinx() / ax.twiny()", brief: "Add a second y-axis or x-axis sharing the other dimension", code: `fig, ax1 = plt.subplots()
+ax2 = ax1.twinx()        # shares x-axis
+
+ax1.plot(x, y1, 'b-', label='Temperature')
+ax2.plot(x, y2, 'r-', label='Pressure')
+ax1.set_ylabel('Temp (°C)', color='b')
+ax2.set_ylabel('Pressure (Pa)', color='r')`, tags: ["axes"] },
+      { name: "FuncAnimation", brief: "Create animated plots — useful for training curve playback", code: `from matplotlib.animation import FuncAnimation
+
+fig, ax = plt.subplots()
+line, = ax.plot([], [])
+
+def update(frame):
+    line.set_data(x[:frame], y[:frame])
+    return line,
+
+ani = FuncAnimation(fig, update, frames=100,
+                    interval=50, blit=True)
+ani.save('animation.gif', writer='pillow')`, tags: ["animation"] },
+      { name: "plt.imread() / plt.imsave()", brief: "Load and save images via matplotlib", code: `img = plt.imread('image.png')   # → (H,W,4) float32
+img = plt.imread('image.jpg')   # → (H,W,3) uint8
+
+plt.imsave('output.png', arr, cmap='gray')
+plt.imsave('output.png', arr, vmin=0, vmax=1)`, tags: ["image", "io"] },
+      { name: "Patch / Shape artists", brief: "Draw geometric shapes directly on axes", code: `import matplotlib.patches as mpatches
+
+rect = mpatches.Rectangle((x,y), width, height,
+                           linewidth=1, edgecolor='r',
+                           facecolor='none')
+ax.add_patch(rect)
+
+circle = mpatches.Circle((cx, cy), radius=r,
+                          color='blue', alpha=0.3)
+ax.add_patch(circle)`, tags: ["drawing"] },
+    ]
+  }
+];
+
+function highlight(code) {
+  return code
+    .replace(/\b(import|from|as|def|return|for|in|if|else|True|False|None|not|with|print)\b/g, '<span class="kw">$1</span>')
+    .replace(/\b(plt|fig|ax|ax1|ax2|axes|axs|gs|im|sc|cf|ani|line)\b/g, '<span class="fn">$1</span>')
+    .replace(/(#.+)/g, '<span class="cm">$1</span>')
+    .replace(/('[\w./_\-\s%°]*'|"[\w./_\-\s%°]*")/g, '<span class="st">$1</span>')
+    .replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="nm">$1</span>');
+}
+
+function buildUI() {
+  const main = document.getElementById('main');
+  const filterBtns = document.getElementById('filter-btns');
+  let totalCmds = 0;
+
+  CATEGORIES.forEach(cat => {
+    totalCmds += cat.commands.length;
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn'; btn.dataset.filter = cat.id; btn.textContent = cat.name;
+    filterBtns.appendChild(btn);
+
+    const section = document.createElement('div');
+    section.className = 'category'; section.dataset.catId = cat.id;
+    section.innerHTML = `<div class="cat-header"><div class="cat-dot" style="background:${cat.color}"></div><div class="cat-title" style="color:${cat.color}">${cat.name}</div><div class="cat-line"></div><div class="cat-count">${cat.commands.length} commands</div></div><div class="cards-grid"></div>`;
+
+    const grid = section.querySelector('.cards-grid');
+    cat.commands.forEach(cmd => {
+      const card = document.createElement('div');
+      card.className = 'card'; card.style.setProperty('--cat-color', cat.color);
+      card.dataset.name = cmd.name.toLowerCase(); card.dataset.tags = cmd.tags.join(' '); card.dataset.catId = cat.id;
+      const tagHTML = cmd.tags.map(t => `<span class="tag" style="color:${cat.color};border-color:${cat.color}33">${t}</span>`).join('');
+      card.innerHTML = `<div class="card-top"><div class="card-name">${cmd.name}</div><div class="card-toggle">▼</div></div><div class="card-brief">${cmd.brief}</div><div class="card-detail"><div><div class="detail-label">Usage</div><div class="code-block">${highlight(cmd.code)}</div></div><div class="tags">${tagHTML}</div></div>`;
+      card.addEventListener('click', () => card.classList.toggle('open'));
+      grid.appendChild(card);
+    });
+    main.appendChild(section);
+  });
+
+  document.getElementById('total-count').textContent = totalCmds;
+  document.getElementById('cat-count').textContent = CATEGORIES.length;
+
+  filterBtns.addEventListener('click', e => {
+    if (!e.target.classList.contains('filter-btn')) return;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    const filter = e.target.dataset.filter;
+    document.querySelectorAll('.category').forEach(sec => sec.classList.toggle('hidden', filter !== 'all' && sec.dataset.catId !== filter));
+  });
+
+  document.getElementById('search').addEventListener('input', e => {
+    const q = e.target.value.toLowerCase().trim();
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.filter-btn[data-filter="all"]').classList.add('active');
+    document.querySelectorAll('.category').forEach(s => s.classList.remove('hidden'));
+    if (!q) { document.querySelectorAll('.card').forEach(c => c.classList.remove('hidden')); return; }
+    document.querySelectorAll('.card').forEach(card => {
+      const match = card.dataset.name.includes(q) || card.dataset.tags.includes(q) || card.querySelector('.card-brief').textContent.toLowerCase().includes(q);
+      card.classList.toggle('hidden', !match);
+    });
+    document.querySelectorAll('.category').forEach(sec => {
+      sec.classList.toggle('hidden', ![...sec.querySelectorAll('.card')].some(c => !c.classList.contains('hidden')));
+    });
+  });
+}
+buildUI();
+</script>
+</body>
+</html>

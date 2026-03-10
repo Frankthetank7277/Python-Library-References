@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scikit-learn API Reference</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #0a0c10; --surface: #111318; --surface2: #181c24; --border: #1e2330; --accent: #f97316; --accent2: #facc15; --text: #e2e8f0; --muted: #64748b; --code: #94a3b8; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; z-index: 0; }
+  body::after { content: ''; position: fixed; bottom: -100px; right: -100px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(249,115,22,0.05) 0%, transparent 70%); pointer-events: none; z-index: 0; }
+  .back-nav { position: relative; z-index: 1; padding: 16px 40px; border-bottom: 1px solid var(--border); }
+  .back-nav a { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--muted); text-decoration: none; letter-spacing: 1px; text-transform: uppercase; transition: color 0.2s; }
+  .back-nav a:hover { color: var(--accent); }
+  header { position: relative; z-index: 1; padding: 48px 40px 32px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+  .logo-area h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 800; letter-spacing: -2px; line-height: 1; background: linear-gradient(135deg, #f97316 0%, #facc15 55%, #86efac 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .logo-area .subtitle { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--muted); letter-spacing: 3px; text-transform: uppercase; margin-top: 6px; }
+  .stats { display: flex; gap: 24px; flex-wrap: wrap; }
+  .stat { text-align: right; }
+  .stat-num { font-size: 1.8rem; font-weight: 800; color: var(--accent); line-height: 1; }
+  .stat-label { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; }
+  .search-bar { position: relative; z-index: 1; padding: 20px 40px; border-bottom: 1px solid var(--border); display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .search-input { flex: 1; min-width: 200px; background: var(--surface); border: 1px solid var(--border); color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; padding: 10px 16px; outline: none; transition: border-color 0.2s; }
+  .search-input::placeholder { color: var(--muted); }
+  .search-input:focus { border-color: var(--accent); }
+  .filter-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .filter-btn { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; padding: 8px 14px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; letter-spacing: 1px; text-transform: uppercase; transition: all 0.15s; }
+  .filter-btn:hover, .filter-btn.active { background: var(--surface2); color: var(--text); border-color: var(--muted); }
+  .filter-btn.active { border-color: var(--accent); color: var(--accent); }
+  main { position: relative; z-index: 1; padding: 32px 40px; display: flex; flex-direction: column; gap: 40px; }
+  .category { display: flex; flex-direction: column; gap: 16px; }
+  .cat-header { display: flex; align-items: center; gap: 16px; }
+  .cat-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .cat-title { font-size: 0.7rem; font-family: 'JetBrains Mono', monospace; letter-spacing: 3px; text-transform: uppercase; font-weight: 700; }
+  .cat-line { flex: 1; height: 1px; background: var(--border); }
+  .cat-count { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--muted); }
+  .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+  .card { background: var(--surface); border: 1px solid var(--border); cursor: pointer; transition: all 0.2s; overflow: hidden; position: relative; }
+  .card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--cat-color); transform: scaleY(0); transition: transform 0.2s; transform-origin: bottom; }
+  .card:hover::before, .card.open::before { transform: scaleY(1); }
+  .card:hover { border-color: var(--cat-color); background: var(--surface2); transform: translateY(-1px); }
+  .card.open { border-color: var(--cat-color); }
+  .card-top { padding: 14px 16px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .card-name { font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; font-weight: 500; color: var(--cat-color); word-break: break-all; line-height: 1.4; }
+  .card-toggle { font-size: 0.65rem; color: var(--muted); flex-shrink: 0; transition: transform 0.2s; margin-top: 2px; }
+  .card.open .card-toggle { transform: rotate(180deg); }
+  .card-brief { font-size: 0.75rem; color: var(--muted); padding: 0 16px 12px; line-height: 1.5; }
+  .card-detail { display: none; border-top: 1px solid var(--border); padding: 14px 16px; flex-direction: column; gap: 10px; }
+  .card.open .card-detail { display: flex; }
+  .detail-label { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 4px; }
+  .code-block { background: var(--bg); border: 1px solid var(--border); padding: 10px 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--code); line-height: 1.7; overflow-x: auto; white-space: pre; }
+  .code-block .kw { color: #c792ea; } .code-block .fn { color: #82aaff; } .code-block .st { color: #c3e88d; } .code-block .nm { color: #f78c6c; } .code-block .cm { color: #546e7a; }
+  .tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; padding: 3px 8px; border: 1px solid; text-transform: uppercase; letter-spacing: 1px; }
+  .hidden { display: none !important; }
+  footer { position: relative; z-index: 1; padding: 24px 40px; border-top: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--muted); letter-spacing: 1px; display: flex; gap: 16px; justify-content: space-between; flex-wrap: wrap; }
+  @media (max-width: 600px) { .back-nav, header, .search-bar, main, footer { padding-left: 20px; padding-right: 20px; } .cards-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="back-nav"><a href="index.html">← Back to index</a></div>
+<header>
+  <div class="logo-area">
+    <h1>Scikit-learn API</h1>
+    <div class="subtitle">Machine Learning Command Reference</div>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="stat-num" id="total-count">0</div><div class="stat-label">Commands</div></div>
+    <div class="stat"><div class="stat-num" id="cat-count">0</div><div class="stat-label">Categories</div></div>
+  </div>
+</header>
+<div class="search-bar">
+  <input class="search-input" type="text" placeholder="Search commands... (e.g. fit, pipeline, cross_val)" id="search" />
+  <div class="filter-btns" id="filter-btns"><button class="filter-btn active" data-filter="all">All</button></div>
+</div>
+<main id="main"></main>
+<footer>
+  <span>Click any card to expand with usage examples</span>
+  <span>Scikit-learn 1.x · Frank Lato</span>
+</footer>
+<script>
+const CATEGORIES = [
+  {
+    id: "workflow",
+    name: "Core Workflow",
+    color: "#f97316",
+    commands: [
+      { name: ".fit() / .predict() / .transform()", brief: "The universal sklearn API — every estimator follows this pattern", code: `from sklearn.linear_model import LogisticRegression
+
+model = LogisticRegression()
+model.fit(X_train, y_train)       # learn parameters
+y_pred = model.predict(X_test)    # classification
+y_prob = model.predict_proba(X_test)  # probabilities
+score = model.score(X_test, y_test)   # accuracy`, tags: ["workflow", "fundamental"] },
+      { name: "train_test_split()", brief: "Split arrays into random train and test subsets", code: `from sklearn.model_selection import train_test_split
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y,
+    test_size=0.2,
+    random_state=42,
+    stratify=y        # preserve class balance
+)`, tags: ["workflow", "fundamental"] },
+      { name: "Pipeline()", brief: "Chain preprocessing + model into one estimator — prevents data leakage", code: `from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVC
+
+pipe = Pipeline([
+    ('scaler', StandardScaler()),
+    ('svm', SVC(kernel='rbf', C=1.0))
+])
+pipe.fit(X_train, y_train)
+pipe.predict(X_test)`, tags: ["workflow", "pipeline"] },
+      { name: "make_pipeline()", brief: "Shorthand pipeline creation without naming each step", code: `from sklearn.pipeline import make_pipeline
+from sklearn.decomposition import PCA
+
+pipe = make_pipeline(
+    StandardScaler(),
+    PCA(n_components=50),
+    LogisticRegression(max_iter=1000)
+)`, tags: ["workflow", "pipeline"] },
+    ]
+  },
+  {
+    id: "preprocessing",
+    name: "Preprocessing",
+    color: "#facc15",
+    commands: [
+      { name: "StandardScaler / MinMaxScaler", brief: "Standardize features to zero mean or scale to a fixed range", code: `from sklearn.preprocessing import StandardScaler, MinMaxScaler
+
+scaler = StandardScaler()
+X_train_sc = scaler.fit_transform(X_train)  # fit + transform
+X_test_sc  = scaler.transform(X_test)        # transform only!
+
+mm = MinMaxScaler(feature_range=(0, 1))
+X_mm = mm.fit_transform(X)`, tags: ["preprocessing", "scaling"] },
+      { name: "LabelEncoder / OneHotEncoder", brief: "Encode categorical labels as integers or one-hot vectors", code: `from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+
+le = LabelEncoder()
+y_enc = le.fit_transform(['cat','dog','cat','bird'])
+le.inverse_transform([0, 1, 2])
+
+ohe = OneHotEncoder(sparse_output=False)
+X_ohe = ohe.fit_transform(X_cat)`, tags: ["preprocessing", "encoding"] },
+      { name: "SimpleImputer", brief: "Fill missing values with a fixed strategy", code: `from sklearn.impute import SimpleImputer
+
+imp = SimpleImputer(strategy='mean')    # or median, most_frequent
+X_imp = imp.fit_transform(X)
+
+# Constant fill
+imp = SimpleImputer(strategy='constant', fill_value=0)`, tags: ["preprocessing", "missing"] },
+      { name: "PolynomialFeatures", brief: "Generate polynomial and interaction feature terms", code: `from sklearn.preprocessing import PolynomialFeatures
+
+poly = PolynomialFeatures(degree=2, include_bias=False)
+X_poly = poly.fit_transform(X)
+# For X with 2 features: adds x1^2, x1*x2, x2^2`, tags: ["preprocessing", "features"] },
+      { name: "ColumnTransformer", brief: "Apply different transformers to different columns simultaneously", code: `from sklearn.compose import ColumnTransformer
+
+ct = ColumnTransformer([
+    ('num', StandardScaler(), num_cols),
+    ('cat', OneHotEncoder(), cat_cols)
+], remainder='drop')
+
+X_transformed = ct.fit_transform(X)`, tags: ["preprocessing", "pipeline"] },
+    ]
+  },
+  {
+    id: "models",
+    name: "Common Models",
+    color: "#86efac",
+    commands: [
+      { name: "LogisticRegression", brief: "Linear classifier with L1/L2 regularization", code: `from sklearn.linear_model import LogisticRegression
+
+clf = LogisticRegression(
+    C=1.0,             # inverse regularization strength
+    penalty='l2',
+    solver='lbfgs',
+    max_iter=1000,
+    multi_class='auto'
+)`, tags: ["model", "classification"] },
+      { name: "RandomForestClassifier / Regressor", brief: "Ensemble of decision trees — robust, low-tuning baseline", code: `from sklearn.ensemble import RandomForestClassifier
+
+rf = RandomForestClassifier(
+    n_estimators=100,
+    max_depth=None,
+    min_samples_split=2,
+    n_jobs=-1,
+    random_state=42
+)
+rf.feature_importances_   # after fitting`, tags: ["model", "ensemble"] },
+      { name: "SVC / SVR", brief: "Support vector machines for classification and regression", code: `from sklearn.svm import SVC
+
+svc = SVC(
+    kernel='rbf',     # 'linear', 'poly', 'rbf', 'sigmoid'
+    C=1.0,
+    gamma='scale',
+    probability=True  # enable predict_proba
+)`, tags: ["model", "classification"] },
+      { name: "KNeighborsClassifier", brief: "k-nearest neighbors — non-parametric, distance-based classifier", code: `from sklearn.neighbors import KNeighborsClassifier
+
+knn = KNeighborsClassifier(
+    n_neighbors=5,
+    metric='minkowski',  # or 'euclidean', 'cosine'
+    weights='uniform'    # or 'distance'
+)`, tags: ["model", "classification"] },
+      { name: "MLPClassifier", brief: "Multilayer perceptron — sklearn's neural network", code: `from sklearn.neural_network import MLPClassifier
+
+mlp = MLPClassifier(
+    hidden_layer_sizes=(256, 128),
+    activation='relu',
+    solver='adam',
+    learning_rate_init=1e-3,
+    max_iter=200,
+    early_stopping=True
+)`, tags: ["model", "neural"] },
+    ]
+  },
+  {
+    id: "evaluation",
+    name: "Evaluation & Metrics",
+    color: "#67e8f9",
+    commands: [
+      { name: "cross_val_score() / cross_validate()", brief: "K-fold cross-validation — more reliable than a single split", code: `from sklearn.model_selection import cross_val_score, cross_validate
+
+scores = cross_val_score(model, X, y, cv=5, scoring='accuracy')
+print(f'{scores.mean():.3f} ± {scores.std():.3f}')
+
+# Multiple metrics
+res = cross_validate(model, X, y, cv=5,
+                     scoring=['accuracy','f1_macro'],
+                     return_train_score=True)`, tags: ["evaluation", "fundamental"] },
+      { name: "classification_report()", brief: "Precision, recall, F1-score per class — essential for imbalanced data", code: `from sklearn.metrics import classification_report, confusion_matrix
+
+print(classification_report(y_test, y_pred,
+                             target_names=['cat','dog','bird']))
+
+cm = confusion_matrix(y_test, y_pred)
+# Plot with matplotlib imshow`, tags: ["evaluation", "classification"] },
+      { name: "roc_auc_score / roc_curve", brief: "ROC curve and AUC — threshold-independent classifier performance", code: `from sklearn.metrics import roc_auc_score, roc_curve
+
+auc = roc_auc_score(y_test, y_prob[:, 1])  # binary
+fpr, tpr, thresholds = roc_curve(y_test, y_prob[:, 1])
+
+# Multi-class
+auc = roc_auc_score(y_test, y_prob, multi_class='ovr')`, tags: ["evaluation", "classification"] },
+      { name: "mean_squared_error / r2_score", brief: "Regression metrics: MSE, RMSE, MAE, R²", code: `from sklearn.metrics import (mean_squared_error,
+    mean_absolute_error, r2_score)
+
+mse  = mean_squared_error(y_test, y_pred)
+rmse = mean_squared_error(y_test, y_pred, squared=False)
+mae  = mean_absolute_error(y_test, y_pred)
+r2   = r2_score(y_test, y_pred)`, tags: ["evaluation", "regression"] },
+    ]
+  },
+  {
+    id: "tuning",
+    name: "Hyperparameter Tuning",
+    color: "#f9a8d4",
+    commands: [
+      { name: "GridSearchCV", brief: "Exhaustive search over a parameter grid with cross-validation", code: `from sklearn.model_selection import GridSearchCV
+
+param_grid = {
+    'svm__C': [0.1, 1, 10],
+    'svm__kernel': ['rbf', 'linear']
+}
+gs = GridSearchCV(pipe, param_grid, cv=5,
+                  scoring='f1_macro', n_jobs=-1)
+gs.fit(X_train, y_train)
+print(gs.best_params_)
+print(gs.best_score_)`, tags: ["tuning"] },
+      { name: "RandomizedSearchCV", brief: "Randomly sample from parameter distributions — faster than grid search", code: `from sklearn.model_selection import RandomizedSearchCV
+from scipy.stats import loguniform
+
+param_dist = {
+    'C': loguniform(1e-3, 1e3),
+    'gamma': loguniform(1e-4, 1e0)
+}
+rs = RandomizedSearchCV(svc, param_dist, n_iter=50,
+                        cv=5, random_state=42)
+rs.fit(X_train, y_train)`, tags: ["tuning"] },
+    ]
+  },
+  {
+    id: "dimreduce",
+    name: "Dimensionality Reduction",
+    color: "#c4b5fd",
+    commands: [
+      { name: "PCA", brief: "Principal Component Analysis — linear dimensionality reduction", code: `from sklearn.decomposition import PCA
+
+pca = PCA(n_components=50)
+X_pca = pca.fit_transform(X)
+
+# Explained variance
+pca.explained_variance_ratio_
+pca.explained_variance_ratio_.cumsum()
+
+# Keep 95% variance
+pca = PCA(n_components=0.95)`, tags: ["dimreduce", "unsupervised"] },
+      { name: "TSNE", brief: "t-SNE — non-linear embedding for high-dim visualization", code: `from sklearn.manifold import TSNE
+
+tsne = TSNE(n_components=2, perplexity=30,
+            learning_rate='auto', init='pca',
+            random_state=42)
+X_2d = tsne.fit_transform(X)
+# Tip: run PCA first to ~50 dims for speed`, tags: ["dimreduce", "visualization"] },
+      { name: "KMeans / DBSCAN", brief: "Unsupervised clustering algorithms", code: `from sklearn.cluster import KMeans, DBSCAN
+
+km = KMeans(n_clusters=8, random_state=42, n_init='auto')
+labels = km.fit_predict(X)
+km.cluster_centers_
+
+db = DBSCAN(eps=0.5, min_samples=5)
+labels = db.fit_predict(X)   # -1 = noise`, tags: ["clustering", "unsupervised"] },
+    ]
+  }
+];
+
+function highlight(code) {
+  return code
+    .replace(/\b(import|from|as|def|return|for|in|if|else|True|False|None|not|print)\b/g, '<span class="kw">$1</span>')
+    .replace(/\b(pipe|model|clf|rf|svc|knn|mlp|gs|rs|pca|tsne|km|db|ct|imp|scaler|ohe|le|poly|mm)\b/g, '<span class="fn">$1</span>')
+    .replace(/(#.+)/g, '<span class="cm">$1</span>')
+    .replace(/('[\w./_\-\s]*'|"[\w./_\-\s]*")/g, '<span class="st">$1</span>')
+    .replace(/\b(\d+(?:\.\d+)?(?:e-?\d+)?)\b/g, '<span class="nm">$1</span>');
+}
+
+function buildUI() {
+  const main = document.getElementById('main');
+  const filterBtns = document.getElementById('filter-btns');
+  let totalCmds = 0;
+  CATEGORIES.forEach(cat => {
+    totalCmds += cat.commands.length;
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn'; btn.dataset.filter = cat.id; btn.textContent = cat.name;
+    filterBtns.appendChild(btn);
+    const section = document.createElement('div');
+    section.className = 'category'; section.dataset.catId = cat.id;
+    section.innerHTML = `<div class="cat-header"><div class="cat-dot" style="background:${cat.color}"></div><div class="cat-title" style="color:${cat.color}">${cat.name}</div><div class="cat-line"></div><div class="cat-count">${cat.commands.length} commands</div></div><div class="cards-grid"></div>`;
+    const grid = section.querySelector('.cards-grid');
+    cat.commands.forEach(cmd => {
+      const card = document.createElement('div');
+      card.className = 'card'; card.style.setProperty('--cat-color', cat.color);
+      card.dataset.name = cmd.name.toLowerCase(); card.dataset.tags = cmd.tags.join(' '); card.dataset.catId = cat.id;
+      const tagHTML = cmd.tags.map(t => `<span class="tag" style="color:${cat.color};border-color:${cat.color}33">${t}</span>`).join('');
+      card.innerHTML = `<div class="card-top"><div class="card-name">${cmd.name}</div><div class="card-toggle">▼</div></div><div class="card-brief">${cmd.brief}</div><div class="card-detail"><div><div class="detail-label">Usage</div><div class="code-block">${highlight(cmd.code)}</div></div><div class="tags">${tagHTML}</div></div>`;
+      card.addEventListener('click', () => card.classList.toggle('open'));
+      grid.appendChild(card);
+    });
+    main.appendChild(section);
+  });
+  document.getElementById('total-count').textContent = totalCmds;
+  document.getElementById('cat-count').textContent = CATEGORIES.length;
+  filterBtns.addEventListener('click', e => {
+    if (!e.target.classList.contains('filter-btn')) return;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    const filter = e.target.dataset.filter;
+    document.querySelectorAll('.category').forEach(sec => sec.classList.toggle('hidden', filter !== 'all' && sec.dataset.catId !== filter));
+  });
+  document.getElementById('search').addEventListener('input', e => {
+    const q = e.target.value.toLowerCase().trim();
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.filter-btn[data-filter="all"]').classList.add('active');
+    document.querySelectorAll('.category').forEach(s => s.classList.remove('hidden'));
+    if (!q) { document.querySelectorAll('.card').forEach(c => c.classList.remove('hidden')); return; }
+    document.querySelectorAll('.card').forEach(card => {
+      card.classList.toggle('hidden', !(card.dataset.name.includes(q) || card.dataset.tags.includes(q) || card.querySelector('.card-brief').textContent.toLowerCase().includes(q)));
+    });
+    document.querySelectorAll('.category').forEach(sec => {
+      sec.classList.toggle('hidden', ![...sec.querySelectorAll('.card')].some(c => !c.classList.contains('hidden')));
+    });
+  });
+}
+buildUI();
+</script>
+</body>
+</html>
